@@ -4,15 +4,19 @@ enchant();
 var moveSpeed = 5;
 var scene ;
 
+var JOUEUR = 1;
+var ENNEMY  = 2;
+
 window.onload = function() {
     // Starting point
     var game = new Game(320, 440);
     game.preload('res/BG.png',
-       'res/penguinSheet.png',
-       'res/Ice.png',
-       'res/Hit.mp3',
-       'res/bgm.mp3',
-       'res/sound/Wha-Wha.ogg');
+     'res/penguinSheet.png',
+     'res/Ice.png',
+     'res/projectile.png',
+     'res/Hit.mp3',
+     'res/bgm.mp3',
+     'res/sound/Wha-Wha.ogg');
     game.fps = 60;
     game.scale = 1;
     game.onload = function() {
@@ -33,8 +37,7 @@ window.onload = function() {
      * The main gameplay scene.     
      */
      initialize: function() {
-        var game, label, bg, penguin, iceGroup, projectileGroup;
-
+        var game, label, bg, penguin, iceGroup;
         // Call superclass constructor
         Scene.apply(this);
 
@@ -61,20 +64,15 @@ window.onload = function() {
         iceGroup = new Group();
         this.iceGroup = iceGroup;
 
-        projectileGroup = new Group();
-        this.projectileGroup = projectileGroup;
-
         this.addChild(bg);
         this.addChild(iceGroup);
         this.addChild(penguin);
         this.addChild(label);
-        this.addChild(projectileGroup);
+        this.addChild(penguin.projectileGroup);
 
-        game.keybind(32 , 'a');
 
         this.addEventListener(Event.TOUCH_START,this.handleTouchControl);
         this.addEventListener(Event.ENTER_FRAME,this.update);
-        this.addEventListener(Event.a_button, this.onenterframe);
 
         // Instance variables
         this.generateIceTimer = 0;
@@ -88,62 +86,71 @@ window.onload = function() {
     },
 
     handleTouchControl: function (evt) {
-        var laneWidth, lane;
-        laneWidth = 320/3;
-        lane = Math.floor(evt.x/laneWidth);
-        lane = Math.max(Math.min(2,lane),0);
-        this.penguin.switchToLaneNumber(lane);
+        this.penguin.x = evt.x;
+        this.penguin.y = evt.y;
+        this.penguin.shoot();
     },
 
     update: function(evt) {
-        // Score increase as time pass
-        this.scoreTimer += evt.elapsed * 0.001;
-        if(this.scoreTimer >= 0.5)
-        {
-            this.setScore(this.score + 1);
-            this.scoreTimer -= 0.5;
-        }
 
         // Check if it's time to create a new set of obstacles
+        var delta = 2.0;
         this.generateIceTimer += evt.elapsed * 0.001;
-        if(this.generateIceTimer >= 2.5)
+        if(this.generateIceTimer >= delta)
         {
             var ice;
-            this.generateIceTimer -= 2.5;
-            ice = new Ice(Math.floor(Math.random()*3));
+            this.generateIceTimer -= delta;
+            ice = new Ice();
             this.iceGroup.addChild(ice);
         }
+
+        var game;
+        game = Game.instance;
 
         // Check collision
         for (var i = this.iceGroup.childNodes.length - 1; i >= 0; i--) {
             var ice;
             ice = this.iceGroup.childNodes[i];
+
+            //a rempacer par replaceChild
+            this.removeChild(ice.projectileGroup);
+            this.addChild(ice.projectileGroup);
+
             if(ice.intersect(this.penguin)){  
-                var game;
-                game = Game.instance;
                 game.assets['res/Hit.mp3'].play();                    
                 this.iceGroup.removeChild(ice);
                 this.bgm.stop();
                 game.replaceScene(new SceneGameOver(this.score));        
                 break;
             }
+
+            for (var k = ice.projectileGroup.childNodes.length - 1; k >= 0; k--){
+                var iceProjectile;
+                iceProjectile = ice.projectileGroup.childNodes[k];
+                if(iceProjectile.intersect(this.penguin)){
+                    game.assets['res/Hit.mp3'].play();                    
+                    this.iceGroup.removeChild(ice);
+                    this.bgm.stop();
+                    game.replaceScene(new SceneGameOver(this.score));        
+                    break;
+                }
+            }
+
+            for (var j = this.penguin.projectileGroup.childNodes.length - 1; j >= 0; j--){
+               var projectile;
+               projectile = this.penguin.projectileGroup.childNodes[j];
+               if(projectile.intersect(ice)){
+                this.setScore(this.score + 1);
+                this.iceGroup.removeChild(ice);
+                this.penguin.projectileGroup.removeChild(projectile);
+            }
         }
 
+    }
         // Loop BGM
         if( this.bgm.currentTime >= this.bgm.duration ){
             this.bgm.play();
         }
-    },
-
-    onenterframe: function() {
-        var game = Game.instance;
-
-        if(game.input.a ){
-            var p = new Projectile();
-            this.addChild(p);
-            console.log("merrrrddeeee!");
-        }
-
     },
 
     setScore: function (value) {
@@ -159,14 +166,21 @@ window.onload = function() {
 
     /**
      * The player character.     
-     */
+     */     
      initialize: function() {
         var projectileGroup;
+        var shootDuration;
+        var shootPossible = true;
         // Call superclass constructor
         Sprite.apply(this,[30, 43]);
         this.image = Game.instance.assets['res/penguinSheet.png'];        
         this.animationDuration = 0;
+        this.shootDuration = 0;
         this.addEventListener(Event.ENTER_FRAME, this.updateAnimation);
+        this.addEventListener(Event.ENTER_FRAME, this.canShoot);
+
+        projectileGroup = new Group();
+        this.projectileGroup = projectileGroup;
 
         // Key Binding
         // Access to the game singleton instance
@@ -175,6 +189,7 @@ window.onload = function() {
         game.keybind(68, 'right');
         game.keybind(87, 'up');
         game.keybind(83, 'down');
+        game.keybind(32 , 'a');
     },
 
     updateAnimation: function (evt) {        
@@ -186,10 +201,6 @@ window.onload = function() {
         }
     },
 
-    switchToLaneNumber: function(lane){     
-        var targetX = 160 - this.width/2 + (lane-1)*90;
-        this.x = targetX;
-    },
 
     onenterframe: function() {
         //04.2 Keyboard Input
@@ -206,7 +217,31 @@ window.onload = function() {
             this.ty = this.y += moveSpeed;
 
         }
+
+        //shoot
+        if(game.input.a && this.shootPossible==true){
+          this.shoot();
+      }       
+  },
+
+  canShoot: function(evt) {
+    var delta=0.15;
+    this.shootDuration = this.shootDuration +evt.elapsed * 0.001;       
+    if(this.shootDuration >= delta) {
+        this.shootPossible = true;
     }
+    else{
+     this.shootPossible = false;
+ }
+},
+
+shoot: function(){
+    var p = new Projectile(this.x, this.y, JOUEUR);
+    this.projectileGroup.addChild(p);
+    this.shootDuration = 0 ;
+}
+
+
 });
 
  /**
@@ -216,25 +251,29 @@ window.onload = function() {
     /**
      * The obstacle that the penguin must avoid
      */
-     initialize: function(lane) {
+     initialize: function() {
         // Call superclass constructor
         Sprite.apply(this,[48, 49]);
+
+        var projectileGroup;
+        projectileGroup = new Group();
+        this.projectileGroup = projectileGroup;
+        this.animationDuration = 0;
+        this.delta=0.2;
+
         this.image  = Game.instance.assets['res/Ice.png'];      
         this.rotationSpeed = 0;
-        this.setLane(lane);
+        this.setLane();
         this.addEventListener(Event.ENTER_FRAME, this.update);
     },
 
-    setLane: function(lane) {
+    setLane: function() {
         var game, distance;
         game = Game.instance;        
-        distance = 90;
 
-        this.rotationSpeed = Math.random() * 100 - 50;
-
-        this.x = game.width/2 - this.width/2 + (lane - 1) * distance;
+        this.x = this.width/2 + Math.floor(Math.random()*(game.width-40));
         this.y = -this.height;    
-        this.rotation = Math.floor( Math.random() * 360 );    
+        //console.log(this.x);   
     },
 
     update: function(evt) { 
@@ -244,30 +283,67 @@ window.onload = function() {
         ySpeed = moveSpeed*20;
 
         this.y += ySpeed * evt.elapsed * 0.001;
-        this.rotation += this.rotationSpeed * evt.elapsed * 0.001;           
+
         if(this.y > game.height)
         {
             this.parentNode.removeChild(this);          
+        }
+        this.shoot(evt);
+    },
+
+    shoot: function(evt) {
+
+        this.animationDuration += evt.elapsed * 0.001;       
+        if(this.animationDuration >=  this.delta)
+        {
+            var p = new Projectile(this.x, this.y, ENNEMY);
+            this.projectileGroup.addChild(p);
+            this.delta = (Math.random() * 1.3) + 0.7; 
+            this.animationDuration = 0;
         }
     }
 });
 
 var Projectile = enchant.Class.create(enchant.Sprite, {
-    initialize: function()
+
+    initialize: function(x,y, faction)
     {
+        var vitesse = 7;
         var game = Game.instance;
-        Sprite.apply(this,[100, 100]);
-        this.image = Game.instance.assets['res/Ice.png']; // set image
-        this.x = 0;
-        this.y = 40; 
-        
+        this.camp = faction;
+        Sprite.apply(this,[8, 16]);
+        this.image = Game.instance.assets['res/projectile.png']; // set image
+        //this.scale(0.3,0.3);
+
+        if(this.camp == 1){//joueur
+            this.y = y-this.height/2;
+            this.x = x+15-(this.width)/2;
+        }
+        else if(this.camp == 2){
+         this.y = y+30; 
+         this.x = x+24-(this.width)/2;
+     }
+
         this.frame = 15;                   // set image data
         this.addEventListener(Event.ENTER_FRAME,this.update);
     },
 
     update: function(evt) {
-        //this.moveBy(1, 0, 1);
-    }
+        if(this.camp == 1){//joueur
+            this.moveBy(0, -6, 0);
+            if(this.y<this.parentNode.y-50){
+             this.parentNode.removeChild(this);
+             //console.log('DESTROY!!')
+         }
+     }
+     else if(this.camp == 2){
+        this.moveBy(0, 6, 0);
+        if(this.y>this.parentNode.height){
+         this.parentNode.removeChild(this);
+             //console.log('DESTROY!!')
+         }
+     }
+ }
 });
 
 /**
@@ -303,14 +379,13 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
         this.addChild(gameOverLabel);
         this.addChild(scoreLabel);
 
-        this.addEventListener(Event.TOUCH_START, this.touchToRestart);
-
-
+        this.addEventListener(Event.INPUT_CHANGE, this.touchToRestart);
     },
 
     touchToRestart: function(evt) {
         var game = Game.instance;
         this.gom.stop();
-        game.replaceScene(new SceneGame());
+        scene = new SceneGame();
+        game.replaceScene(scene);
     }
 });
