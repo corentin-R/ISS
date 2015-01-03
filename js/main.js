@@ -132,8 +132,8 @@ window.onload = function() {
             ice = this.iceGroup.childNodes[i];
 
             //a rempacer par replaceChild
-            //this.removeChild(ice.projectileGroup);
-            //this.addChild(ice.projectileGroup);
+            this.removeChild(ice.projectileGroup);
+            this.addChild(ice.projectileGroup);
 
             if(ice.intersect(this.penguin)){  
                 game.assets['res/Hit.mp3'].play();                    
