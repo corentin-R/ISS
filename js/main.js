@@ -8,6 +8,7 @@ var playerSheetPath = 'res/playerSheet.png';
 var enemy1SheetPath = 'res/enemy1Sheet.png';
 var projectileSheetPath = 'res/projectile.png';
 var starSheetPath = 'res/star.png';
+var explosionSheetPath = 'res/explosionSheet.png';
 
 var bgmPath = 'res/commandoSteve.ogg';
 var hitPath = 'res/hit2.ogg';
@@ -20,14 +21,16 @@ window.onload = function() {
     // Starting point
     var game = new Game(350, 500);
     game.preload('res/BG.png',
-       playerSheetPath,
-       enemy1SheetPath,
-       projectileSheetPath,
-       starSheetPath,
-       'res/Hit.mp3',
-       bgmPath,
-       gameOverPath,
-       hitPath);
+     playerSheetPath,
+     enemy1SheetPath,
+     projectileSheetPath,
+     starSheetPath,
+     'res/Hit.mp3',
+     bgmPath,
+     gameOverPath,
+     hitPath,
+     explosionSheetPath);
+
     game.fps = 60;
     game.scale = 1;
     game.onload = function() {
@@ -66,6 +69,15 @@ window.onload = function() {
         label._style.textShadow ="-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
         this.scoreLabel = label;        
 
+        shooting = new Label('Shooting: 0');
+        shooting.x = game.width-shooting.width-7;
+        shooting.y = 5;        
+        shooting.color = 'white';
+        shooting.font = '16px strong';
+        shooting.textAlign = 'right';
+        shooting._style.textShadow ="-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
+        this.shooting = shooting;   
+
         penguin = new Penguin();
         penguin.x = game.width/2 - penguin.width/2;
         penguin.y = 280;
@@ -74,10 +86,20 @@ window.onload = function() {
         iceGroup = new Group();
         this.iceGroup = iceGroup;
 
-        this.addChild(iceGroup);
+        projectilesGroup = new Group();
+        this.projectilesGroup = projectilesGroup;
+
+        starGroup = new Group();
+        this.starGroup = starGroup;
+
+        //attention à l'ordre!!!!
+        this.addChild(this.starGroup);
+        this.addChild(projectilesGroup);
+        this.addChild(iceGroup);        
         this.addChild(penguin);
+        this.addChild(penguin.projectileGroup);        
         this.addChild(label);
-        this.addChild(penguin.projectileGroup);
+        this.addChild(shooting);
 
         this.addEventListener(Event.TOUCH_START,this.handleTouchControl);
         this.addEventListener(Event.ENTER_FRAME,this.update);
@@ -85,12 +107,11 @@ window.onload = function() {
         // Instance variables
         this.generateIceTimer = 0;
         this.generateStars = 0;
-        this.scoreTimer = 0;
         this.score = 0;
-
-        this.bgm = game.assets[bgmPath]; // Add this line
+        this.shoot = 0;
 
         // Start BGM
+        this.bgm = game.assets[bgmPath];
         this.bgm.play();
     },
 
@@ -106,10 +127,10 @@ window.onload = function() {
         var delta = 2.0;
         this.generateIceTimer += evt.elapsed * 0.001;
         this.generateStars += evt.elapsed * 0.001;
-        if(this.generateStars>= 0.4)
+        if(this.generateStars>= 0.5)
         {
             star = new Star();
-            this.addChild(star);
+            this.starGroup.addChild(star);
             this.generateStars=0;
         }
         if(this.generateIceTimer >= delta)
@@ -120,67 +141,51 @@ window.onload = function() {
             this.iceGroup.addChild(ice);
         }
 
-
-
-
         var game;
         game = Game.instance;
 
         // Check collision
+
+        for (var k = this.projectilesGroup.childNodes.length - 1; k >= 0; k--){
+            var iceProjectile;
+            iceProjectile = this.projectilesGroup.childNodes[k];
+            if(iceProjectile.intersect(this.penguin)){
+                this.penguin.destroyed(iceProjectile);      
+                break;
+            }
+        }
         for (var i = this.iceGroup.childNodes.length - 1; i >= 0; i--) {
             var ice;
             ice = this.iceGroup.childNodes[i];
 
-            //a rempacer par replaceChild
-            this.removeChild(ice.projectileGroup);
-            this.addChild(ice.projectileGroup);
-
             if(ice.intersect(this.penguin)){  
-                game.assets['res/Hit.mp3'].play();                    
-                this.iceGroup.removeChild(ice);
-                this.bgm.stop();
-                game.replaceScene(new SceneGameOver(this.score));        
-                break;
-            }
+             this.penguin.destroyed(ice, JOUEUR);
+             break;
+         }
 
-            for (var k = ice.projectileGroup.childNodes.length - 1; k >= 0; k--){
-                var iceProjectile;
-                iceProjectile = ice.projectileGroup.childNodes[k];
-                if(iceProjectile.intersect(this.penguin)){
-                    game.assets['res/Hit.mp3'].play();                    
-                    this.iceGroup.removeChild(ice);
-                    this.bgm.stop();
-                    game.replaceScene(new SceneGameOver(this.score));        
-                    break;
-                }
-            }
-
-            for (var j = this.penguin.projectileGroup.childNodes.length - 1; j >= 0; j--){
-             var projectile;
-             projectile = this.penguin.projectileGroup.childNodes[j];
-             if(projectile.intersect(ice)){
-                this.setScore(this.score + 1);
-                this.iceGroup.removeChild(ice);
-                this.penguin.projectileGroup.removeChild(projectile);
-                game.assets[hitPath].play();
-            }
+         for (var j = this.penguin.projectileGroup.childNodes.length - 1; j >= 0; j--){
+           var projectile;
+           projectile = this.penguin.projectileGroup.childNodes[j];
+           if(projectile.intersect(ice)){
+            ice.destroyed(projectile);
         }
-
     }
+}
 
-     //a rempacer par replaceChild
-     this.removeChild(this.penguin);
-     this.addChild(this.penguin);
-        // Loop BGM
-        if( this.bgm.currentTime >= this.bgm.duration ){
-            this.bgm.play();
-        }
-    },
+       // Loop BGM
+       if( this.bgm.currentTime >= this.bgm.duration ){
+        this.bgm.play();
+    }
+},
 
-    setScore: function (value) {
-        this.score = value;
-        this.scoreLabel.text = 'Score: ' + this.score;
-    }   
+setScore: function (value) {
+    this.score = value;
+    this.scoreLabel.text = 'Score: ' + this.score;
+} ,  
+setShoot: function (value) {
+    this.shoot = value;
+    this.shooting.text = 'Shooting: ' + this.shoot;
+}  
 });
 
 /**
@@ -239,7 +244,6 @@ window.onload = function() {
             this.ty = this.y -= moveSpeed;
         } else if (game.input.down && !game.input.up) {
             this.ty = this.y += moveSpeed;
-
         }
 
         //shoot
@@ -255,16 +259,26 @@ window.onload = function() {
         this.shootPossible = true;
     }
     else{
-       this.shootPossible = false;
-   }
+     this.shootPossible = false;
+ }
 },
 
 shoot: function(){
     var p = new Projectile(this.x, this.y, JOUEUR);
     this.projectileGroup.addChild(p);
     this.shootDuration = 0 ;
-}
+    this.parentNode.shoot++;
+    this.parentNode.setShoot(this.parentNode.shoot);
+},
 
+destroyed: function(proj) {
+    var game = Game.instance;
+    this.parentNode.projectilesGroup.removeChild(proj);
+    game.assets[hitPath].play();
+    explo = new Explostion(this.x, this.y, JOUEUR);
+    this.parentNode.addChild(explo);
+    this.parentNode.removeChild(this);
+}
 
 });
 
@@ -279,9 +293,7 @@ shoot: function(){
         // Call superclass constructor
         Sprite.apply(this,[60, 56]);
 
-        var projectileGroup;
-        projectileGroup = new Group();
-        this.projectileGroup = projectileGroup;
+
         this.animationDuration = 0;
         this.delta=0.2;
 
@@ -297,7 +309,6 @@ shoot: function(){
 
         this.x = this.width/2 + Math.floor(Math.random()*(game.width))-this.width;
         this.y = -this.height;    
-        //console.log(this.x);   
     },
 
     update: function(evt) { 
@@ -321,10 +332,19 @@ shoot: function(){
         if(this.animationDuration >=  this.delta)
         {
             var p = new Projectile(this.x, this.y, ENNEMY);
-            this.projectileGroup.addChild(p);
+            this.parentNode.parentNode.projectilesGroup.addChild(p);
             this.delta = (Math.random() * 1.3) + 0.7; 
             this.animationDuration = 0;
         }
+    },
+    destroyed: function(proj) {
+        var game = Game.instance;
+        this.parentNode.parentNode.setScore(this.parentNode.parentNode.score + 1);
+        this.parentNode.parentNode.penguin.projectileGroup.removeChild(proj);
+        game.assets[hitPath].play();
+        explo = new Explostion(this.x, this.y, ENNEMY);
+        this.parentNode.parentNode.addChild(explo);
+        this.parentNode.parentNode.iceGroup.removeChild(this);
     }
 });
 
@@ -343,15 +363,13 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
             this.x = x+30-(this.width)/2;
         }
         else if(this.camp == 2){
-           this.y = y+30; 
-           this.x = x+30-(this.width)/2;
+         this.y = y+30; 
+         this.x = x+30-(this.width)/2;
            this.angleX=Math.floor(Math.random()*2);//Math.random()*4-2;
            if(this.angleX==0)
             this.angleX=-1;
         this.angleY=Math.sqrt(16-Math.pow(this.angleX,2));
-           // console.log(this.angleX);
-           // console.log(Math.pow(this.angleY,2)+Math.pow(this.angleX,2));
-       }
+    }
 
         this.frame = 15;                   // set image data
         this.addEventListener(Event.ENTER_FRAME,this.update);
@@ -361,7 +379,7 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
         if(this.camp == 1){//joueur
             this.moveBy(0, -6, 0);
             if(this.y<this.parentNode.y-50){
-               this.parentNode.removeChild(this);
+             this.parentNode.removeChild(this);
              console.log('DESTROY!!')
          }
      }
@@ -369,12 +387,45 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
         this.y+=this.angleY;
         this.x+=this.angleX;
         if(this.y>this.parentNode.height){
-           this.parentNode.removeChild(this);             
-       }
-   }
+         this.parentNode.removeChild(this);             
+     }
+ }
 }
 });
 
+var Explostion = enchant.Class.create(enchant.Sprite, {
+
+    initialize: function(x,y, faction) {
+        var game = Game.instance;
+        Sprite.apply(this,[60, 60]);
+        this.image = Game.instance.assets[explosionSheetPath]; // set image        
+        this.y = y;
+        this.x = x;
+        this.cpt=0;   
+        this.faction=faction;              
+        this.addEventListener(Event.ENTER_FRAME,this.update);
+        this.animationDuration=0
+    },
+
+    update: function(evt) {
+        this.animationDuration += evt.elapsed * 0.001;       
+        if(this.animationDuration >= 0.06)
+        {
+            this.frame = (this.frame + 1);
+            this.animationDuration =0;
+            this.cpt +=1;
+            if(this.cpt==5)
+            {
+                if(this.faction==JOUEUR){
+                    var game = Game.instance;
+                    this.parentNode.bgm.stop();
+                    game.replaceScene(new SceneGameOver(this.parentNode.score,this.parentNode.shoot));   
+                }
+                this.parentNode.removeChild(this);
+            }
+        }
+    }
+});
 
 
 var Star = enchant.Class.create(enchant.Sprite, {
@@ -394,18 +445,18 @@ var Star = enchant.Class.create(enchant.Sprite, {
 
     update: function(evt) {
         this.moveBy(0, this.vitesse, 0);
-         if(this.y>this.parentNode.height){
-           this.parentNode.removeChild(this);
-           console.log('sta DESTROY')
-       }
-   }
+        if(this.y>this.parentNode.height){
+         this.parentNode.removeChild(this);
+         console.log('sta DESTROY')
+     }
+ }
 
 });
 /**
  * SceneGameOver  
  */
  var SceneGameOver = Class.create(Scene, {
-    initialize: function(score) {
+    initialize: function(score, shoot) {
         var gameOverLabel, scoreLabel;
         Scene.apply(this);
         this.backgroundColor = 'black';
@@ -417,30 +468,51 @@ var Star = enchant.Class.create(enchant.Sprite, {
         // Start BGM
         this.gom.play();
 
-        gameOverLabel = new Label("GAME OVER<br>Tap to Restart");
+        gameOverLabel = new Label("GAME OVER<br>Move to Restart");
         gameOverLabel.x = game.width/2-gameOverLabel.width/2;
-        gameOverLabel.y = game.height/2-70;
+        gameOverLabel.y = game.height/3-70;
         gameOverLabel.color = 'white';
         gameOverLabel.font = '32px strong';
         gameOverLabel.textAlign = 'center';
 
-        scoreLabel = new Label('SCORE<br>' + score);
+        scoreLabel = new Label('SCORE: ' + score);
         scoreLabel.x = game.width/2-scoreLabel.width/2;
-        scoreLabel.y = game.height/3-70;        
+        scoreLabel.y = game.height/2;        
         scoreLabel.color = 'white';
-        scoreLabel.font = '16px strong';
+        scoreLabel.font = '24px strong';
         scoreLabel.textAlign = 'center';
+
+        shootLabel = new Label('SHOOTING: ' + shoot);
+        shootLabel.x = game.width/2-shootLabel.width/2;
+        shootLabel.y = game.height/2+2*20;        
+        shootLabel.color = 'white';
+        shootLabel.font = '24px strong';
+        shootLabel.textAlign = 'center';
+
+
+        var nombre = score/shoot*100;
+        arrondi = nombre*100;          // 556.845
+        arrondi = Math.round(arrondi); // 556
+        arrondi = arrondi/100;         // 5.56
+        ratioLabel = new Label('RATIO: ' +arrondi + '%');
+        ratioLabel.x = game.width/2-ratioLabel.width/2;
+        ratioLabel.y = game.height/2+4*20;        
+        ratioLabel.color = 'white';
+        ratioLabel.font = '24px strong';
+        ratioLabel.textAlign = 'center';
 
         this.addChild(gameOverLabel);
         this.addChild(scoreLabel);
+        this.addChild(shootLabel);
+        this.addChild(ratioLabel);
 
         this.addEventListener(Event.INPUT_CHANGE, this.touchToRestart);
-    },
+},
 
-    touchToRestart: function(evt) {
-        var game = Game.instance;
-        this.gom.stop();
-        scene = new SceneGame();
-        game.replaceScene(scene);
-    }
+touchToRestart: function(evt) {
+    var game = Game.instance;
+    this.gom.stop();
+    scene = new SceneGame();
+    game.replaceScene(scene);
+}
 });
