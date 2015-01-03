@@ -11,12 +11,12 @@ window.onload = function() {
     // Starting point
     var game = new Game(320, 440);
     game.preload('res/BG.png',
-     'res/penguinSheet.png',
-     'res/Ice.png',
-     'res/projectile.png',
-     'res/Hit.mp3',
-     'res/bgm.mp3',
-     'res/sound/Wha-Wha.ogg');
+       'res/penguinSheet.png',
+       'res/Ice.png',
+       'res/projectile.png',
+       'res/Hit.mp3',
+       'res/bgm.mp3',
+       'res/sound/Wha-Wha.ogg');
     game.fps = 60;
     game.scale = 1;
     game.onload = function() {
@@ -137,9 +137,9 @@ window.onload = function() {
             }
 
             for (var j = this.penguin.projectileGroup.childNodes.length - 1; j >= 0; j--){
-               var projectile;
-               projectile = this.penguin.projectileGroup.childNodes[j];
-               if(projectile.intersect(ice)){
+             var projectile;
+             projectile = this.penguin.projectileGroup.childNodes[j];
+             if(projectile.intersect(ice)){
                 this.setScore(this.score + 1);
                 this.iceGroup.removeChild(ice);
                 this.penguin.projectileGroup.removeChild(projectile);
@@ -231,8 +231,8 @@ window.onload = function() {
         this.shootPossible = true;
     }
     else{
-     this.shootPossible = false;
- }
+       this.shootPossible = false;
+   }
 },
 
 shoot: function(){
@@ -311,18 +311,24 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
         var vitesse = 7;
         var game = Game.instance;
         this.camp = faction;
-        Sprite.apply(this,[8, 16]);
+        Sprite.apply(this,[10, 10]);
         this.image = Game.instance.assets['res/projectile.png']; // set image
-        //this.scale(0.3,0.3);
+        
 
         if(this.camp == 1){//joueur
             this.y = y-this.height/2;
             this.x = x+15-(this.width)/2;
         }
         else if(this.camp == 2){
-         this.y = y+30; 
-         this.x = x+24-(this.width)/2;
-     }
+           this.y = y+30; 
+           this.x = x+24-(this.width)/2;
+           this.angleX=Math.floor(Math.random()*2);//Math.random()*4-2;
+           if(this.angleX==0)
+            this.angleX=-1;
+           this.angleY=Math.sqrt(16-Math.pow(this.angleX,2));
+           // console.log(this.angleX);
+           // console.log(Math.pow(this.angleY,2)+Math.pow(this.angleX,2));
+    }
 
         this.frame = 15;                   // set image data
         this.addEventListener(Event.ENTER_FRAME,this.update);
@@ -332,18 +338,18 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
         if(this.camp == 1){//joueur
             this.moveBy(0, -6, 0);
             if(this.y<this.parentNode.y-50){
-             this.parentNode.removeChild(this);
+               this.parentNode.removeChild(this);
              //console.log('DESTROY!!')
          }
      }
      else if(this.camp == 2){
-        this.moveBy(0, 6, 0);
+        this.y+=this.angleY;
+        this.x+=this.angleX;
         if(this.y>this.parentNode.height){
-         this.parentNode.removeChild(this);
-             //console.log('DESTROY!!')
-         }
-     }
- }
+           this.parentNode.removeChild(this);             
+       }
+   }
+}
 });
 
 /**
