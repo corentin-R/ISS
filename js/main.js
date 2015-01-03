@@ -4,24 +4,35 @@ enchant();
 var moveSpeed = 5;
 var scene ;
 
+var playerSheetPath = 'res/playerSheet.png';
+var enemy1SheetPath = 'res/enemy1Sheet.png';
+var projectileSheetPath = 'res/projectile.png';
+var starSheetPath = 'res/star.png';
+
+var bgmPath = 'res/commandoSteve.ogg';
+var hitPath = 'res/hit2.ogg';
+var gameOverPath = 'res/gameOver.ogg';
+
 var JOUEUR = 1;
 var ENNEMY  = 2;
 
 window.onload = function() {
     // Starting point
-    var game = new Game(320, 440);
+    var game = new Game(350, 500);
     game.preload('res/BG.png',
-       'res/penguinSheet.png',
-       'res/Ice.png',
-       'res/projectile.png',
+       playerSheetPath,
+       enemy1SheetPath,
+       projectileSheetPath,
+       starSheetPath,
        'res/Hit.mp3',
-       'res/bgm.mp3',
-       'res/sound/Wha-Wha.ogg');
+       bgmPath,
+       gameOverPath,
+       hitPath);
     game.fps = 60;
     game.scale = 1;
     game.onload = function() {
         // Once Game finish loading
-        console.log("Hi, Ocean!");
+        console.log("Hi, Space!");
         scene = new SceneGame();
         game.pushScene(scene);
     }
@@ -44,6 +55,8 @@ window.onload = function() {
         // Access to the game singleton instance
         game = Game.instance;
 
+        this.backgroundColor = 'black';
+
         label = new Label('Score: 0');
         label.x = 5;
         label.y = 5;        
@@ -53,9 +66,6 @@ window.onload = function() {
         label._style.textShadow ="-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
         this.scoreLabel = label;        
 
-        bg = new Sprite(320,440);
-        bg.image = game.assets['res/BG.png'];
-
         penguin = new Penguin();
         penguin.x = game.width/2 - penguin.width/2;
         penguin.y = 280;
@@ -64,22 +74,21 @@ window.onload = function() {
         iceGroup = new Group();
         this.iceGroup = iceGroup;
 
-        this.addChild(bg);
         this.addChild(iceGroup);
         this.addChild(penguin);
         this.addChild(label);
         this.addChild(penguin.projectileGroup);
-
 
         this.addEventListener(Event.TOUCH_START,this.handleTouchControl);
         this.addEventListener(Event.ENTER_FRAME,this.update);
 
         // Instance variables
         this.generateIceTimer = 0;
+        this.generateStars = 0;
         this.scoreTimer = 0;
         this.score = 0;
 
-        this.bgm = game.assets['res/bgm.mp3']; // Add this line
+        this.bgm = game.assets[bgmPath]; // Add this line
 
         // Start BGM
         this.bgm.play();
@@ -96,6 +105,13 @@ window.onload = function() {
         // Check if it's time to create a new set of obstacles
         var delta = 2.0;
         this.generateIceTimer += evt.elapsed * 0.001;
+        this.generateStars += evt.elapsed * 0.001;
+        if(this.generateStars>= 0.4)
+        {
+            star = new Star();
+            this.addChild(star);
+            this.generateStars=0;
+        }
         if(this.generateIceTimer >= delta)
         {
             var ice;
@@ -103,6 +119,9 @@ window.onload = function() {
             ice = new Ice();
             this.iceGroup.addChild(ice);
         }
+
+
+
 
         var game;
         game = Game.instance;
@@ -113,8 +132,8 @@ window.onload = function() {
             ice = this.iceGroup.childNodes[i];
 
             //a rempacer par replaceChild
-            this.removeChild(ice.projectileGroup);
-            this.addChild(ice.projectileGroup);
+            //this.removeChild(ice.projectileGroup);
+            //this.addChild(ice.projectileGroup);
 
             if(ice.intersect(this.penguin)){  
                 game.assets['res/Hit.mp3'].play();                    
@@ -143,10 +162,15 @@ window.onload = function() {
                 this.setScore(this.score + 1);
                 this.iceGroup.removeChild(ice);
                 this.penguin.projectileGroup.removeChild(projectile);
+                game.assets[hitPath].play();
             }
         }
 
     }
+
+     //a rempacer par replaceChild
+     this.removeChild(this.penguin);
+     this.addChild(this.penguin);
         // Loop BGM
         if( this.bgm.currentTime >= this.bgm.duration ){
             this.bgm.play();
@@ -172,8 +196,8 @@ window.onload = function() {
         var shootDuration;
         var shootPossible = true;
         // Call superclass constructor
-        Sprite.apply(this,[30, 43]);
-        this.image = Game.instance.assets['res/penguinSheet.png'];        
+        Sprite.apply(this,[60, 83]);
+        this.image = Game.instance.assets[playerSheetPath];        
         this.animationDuration = 0;
         this.shootDuration = 0;
         this.addEventListener(Event.ENTER_FRAME, this.updateAnimation);
@@ -253,7 +277,7 @@ shoot: function(){
      */
      initialize: function() {
         // Call superclass constructor
-        Sprite.apply(this,[48, 49]);
+        Sprite.apply(this,[60, 56]);
 
         var projectileGroup;
         projectileGroup = new Group();
@@ -261,7 +285,7 @@ shoot: function(){
         this.animationDuration = 0;
         this.delta=0.2;
 
-        this.image  = Game.instance.assets['res/Ice.png'];      
+        this.image  = Game.instance.assets[enemy1SheetPath];      
         this.rotationSpeed = 0;
         this.setLane();
         this.addEventListener(Event.ENTER_FRAME, this.update);
@@ -271,7 +295,7 @@ shoot: function(){
         var game, distance;
         game = Game.instance;        
 
-        this.x = this.width/2 + Math.floor(Math.random()*(game.width-40));
+        this.x = this.width/2 + Math.floor(Math.random()*(game.width))-this.width;
         this.y = -this.height;    
         //console.log(this.x);   
     },
@@ -311,24 +335,23 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
         var vitesse = 7;
         var game = Game.instance;
         this.camp = faction;
-        Sprite.apply(this,[10, 10]);
-        this.image = Game.instance.assets['res/projectile.png']; // set image
+        Sprite.apply(this,[12, 12]);
+        this.image = Game.instance.assets[ projectileSheetPath]; // set image
         
-
         if(this.camp == 1){//joueur
             this.y = y-this.height/2;
-            this.x = x+15-(this.width)/2;
+            this.x = x+30-(this.width)/2;
         }
         else if(this.camp == 2){
            this.y = y+30; 
-           this.x = x+24-(this.width)/2;
+           this.x = x+30-(this.width)/2;
            this.angleX=Math.floor(Math.random()*2);//Math.random()*4-2;
            if(this.angleX==0)
             this.angleX=-1;
-           this.angleY=Math.sqrt(16-Math.pow(this.angleX,2));
+        this.angleY=Math.sqrt(16-Math.pow(this.angleX,2));
            // console.log(this.angleX);
            // console.log(Math.pow(this.angleY,2)+Math.pow(this.angleX,2));
-    }
+       }
 
         this.frame = 15;                   // set image data
         this.addEventListener(Event.ENTER_FRAME,this.update);
@@ -339,7 +362,7 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
             this.moveBy(0, -6, 0);
             if(this.y<this.parentNode.y-50){
                this.parentNode.removeChild(this);
-             //console.log('DESTROY!!')
+             console.log('DESTROY!!')
          }
      }
      else if(this.camp == 2){
@@ -352,6 +375,32 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
 }
 });
 
+
+
+var Star = enchant.Class.create(enchant.Sprite, {
+
+    initialize: function(x,y, faction) {
+        var game = Game.instance;
+        Sprite.apply(this,[32, 32]);
+        this.image = Game.instance.assets[starSheetPath]; // set image        
+        this.y = 0;
+        this.x = Math.random()*game.width-this.width;
+        this.vitesse = Math.random()*2+7;
+        this.frame = 15;                   // set image data
+        var scalee = Math.random()*0.45+0.10;
+        this.scale(scalee,scalee);
+        this.addEventListener(Event.ENTER_FRAME,this.update);
+    },
+
+    update: function(evt) {
+        this.moveBy(0, this.vitesse, 0);
+         if(this.y>this.parentNode.height){
+           this.parentNode.removeChild(this);
+           console.log('sta DESTROY')
+       }
+   }
+
+});
 /**
  * SceneGameOver  
  */
@@ -364,20 +413,20 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
         var game;
         game = Game.instance;
         // Background music
-        this.gom = game.assets['res/sound/Wha-Wha.ogg']; // Add this line
+        this.gom = game.assets[gameOverPath]; // Add this line
         // Start BGM
         this.gom.play();
 
         gameOverLabel = new Label("GAME OVER<br>Tap to Restart");
-        gameOverLabel.x = 8;
-        gameOverLabel.y = 128;
+        gameOverLabel.x = game.width/2-gameOverLabel.width/2;
+        gameOverLabel.y = game.height/2-70;
         gameOverLabel.color = 'white';
         gameOverLabel.font = '32px strong';
         gameOverLabel.textAlign = 'center';
 
         scoreLabel = new Label('SCORE<br>' + score);
-        scoreLabel.x = 9;
-        scoreLabel.y = 32;        
+        scoreLabel.x = game.width/2-scoreLabel.width/2;
+        scoreLabel.y = game.height/3-70;        
         scoreLabel.color = 'white';
         scoreLabel.font = '16px strong';
         scoreLabel.textAlign = 'center';
