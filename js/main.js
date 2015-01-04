@@ -1,3 +1,5 @@
+
+
 // Start enchant.js
 enchant();
 
@@ -18,173 +20,199 @@ var JOUEUR = 1;
 var ENNEMY  = 2;
 
 window.onload = function() {
-    // Starting point
-    var game = new Game(350, 500);
-    game.preload('res/BG.png',
-       playerSheetPath,
-       enemy1SheetPath,
-       projectileSheetPath,
-       starSheetPath,
-       'res/Hit.mp3',
-       bgmPath,
-       gameOverPath,
-       hitPath,
-       explosionSheetPath);
 
-    game.fps = 60;
-    game.scale = 1;
-    game.onload = function() {
-        // Once Game finish loading
-        scene = new SceneGame();
-        game.pushScene(scene);
-    }
-    window.scrollTo(0,0);
-    game.start();   
-};
+        //source du code pour la taille de la fenêtre: http://java.scripts-fr.com/scripts.php?js=23
+        var larg = (window.innerWidth);
+        var haut = (window.innerHeight);
+
+        console.log("Cette fenêtre fait " + larg + " de large et "+haut+" de haut"); 
+        var hauteurBase = 620;
+        var largeurBase = 420;
+
+        // Starting point
+
+        var scale;
+        if(larg<largeurBase){
+                scale = larg/largeurBase;
+                hauteurBase=haut/scale;
+         }
+         else if(haut<hauteurBase){
+                scale = haut/hauteurBase;                
+         }
+        else{
+                scale=1;
+        }
+
+        var game = new Game(largeurBase, hauteurBase);
+        game.preload('res/BG.png',
+         playerSheetPath,
+         enemy1SheetPath,
+         projectileSheetPath,
+         starSheetPath,
+         'res/Hit.mp3',
+         bgmPath,
+         gameOverPath,
+         hitPath,
+         explosionSheetPath);
+
+        game.fps = 60;
+        game.scale=scale;
+        game.onload = function() {
+                // Once Game finish loading
+                scene = new SceneGame();
+                game.pushScene(scene);
+                //scene.moveTo(50, 100); 
+        }
+        window.scrollTo(0,0);
+        game.start();  
+        
+    };
 
 /**
  * SceneGame  
  */
  var SceneGame = Class.create(Scene, {
-    /**
-     * The main gameplay scene.     
-     */
-     initialize: function() {
-        var game, label, bg, penguin, iceGroup;
-        // Call superclass constructor
-        Scene.apply(this);
+        /**
+         * The main gameplay scene.     
+         */
+         initialize: function() {
+            var game, label, bg, penguin, iceGroup;
+                // Call superclass constructor
+                Scene.apply(this);
 
-        // Access to the game singleton instance
-        game = Game.instance;
+                // Access to the game singleton instance
+                game = Game.instance;
+                game.x=50;//larg/2-game.width/2;
+                game.y=100;//   haut/2-game.height/2;
 
-        this.backgroundColor = 'black';
+                this.backgroundColor = 'black';
 
-        label = new Label('Score: 0');
-        label.x = 5;
-        label.y = 5;        
-        label.color = 'white';
-        label.font = '16px strong';
-        label.textAlign = 'left';
-        label._style.textShadow ="-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
-        this.scoreLabel = label;        
+                label = new Label('Score: 0');
+                label.x = 5;
+                label.y = 5;        
+                label.color = 'white';
+                label.font = '20px strong';
+                label.textAlign = 'left';
+                label._style.textShadow ="-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
+                this.scoreLabel = label;        
 
-        shooting = new Label('Shooting: 0');
-        shooting.x = game.width-shooting.width-7;
-        shooting.y = 5;        
-        shooting.color = 'white';
-        shooting.font = '16px strong';
-        shooting.textAlign = 'right';
-        shooting._style.textShadow ="-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
-        this.shooting = shooting;   
+                shooting = new Label('Shooting: 0');
+                shooting.x = game.width-shooting.width-7;
+                shooting.y = 5;        
+                shooting.color = 'white';
+                shooting.font = '20px strong';
+                shooting.textAlign = 'right';
+                shooting._style.textShadow ="-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
+                this.shooting = shooting;   
 
-        penguin = new Penguin();
-        penguin.x = game.width/2 - penguin.width/2;
-        penguin.y = 280;
-        this.penguin = penguin;
+                penguin = new Penguin();
+                penguin.x = game.width/2 - penguin.width/2;
+                penguin.y = 2*game.height/3 - penguin.height/2;
+                this.penguin = penguin;
 
-        iceGroup = new Group();
-        this.iceGroup = iceGroup;
+                iceGroup = new Group();
+                this.iceGroup = iceGroup;
 
-        projectilesGroup = new Group();
-        this.projectilesGroup = projectilesGroup;
+                projectilesGroup = new Group();
+                this.projectilesGroup = projectilesGroup;
 
-        starGroup = new Group();
-        this.starGroup = starGroup;
+                starGroup = new Group();
+                this.starGroup = starGroup;
 
-        //attention à l'ordre!!!!
-        this.addChild(this.starGroup);
-        this.addChild(projectilesGroup);
-        this.addChild(iceGroup);        
-        this.addChild(penguin);
-        this.addChild(penguin.projectileGroup);        
-        this.addChild(label);
-        this.addChild(shooting);
+                //attention à l'ordre!!!!
+                this.addChild(this.starGroup);
+                this.addChild(projectilesGroup);
+                this.addChild(iceGroup);        
+                this.addChild(penguin);
+                this.addChild(penguin.projectileGroup);        
+                this.addChild(label);
+                this.addChild(shooting);
 
-        this.addEventListener(Event.TOUCH_START,this.handleTouchControl);
-        this.addEventListener(Event.ENTER_FRAME,this.update);
+                this.addEventListener(Event.TOUCH_START,this.handleTouchControl);
+                this.addEventListener(Event.ENTER_FRAME,this.update);
 
-        // Instance variables
-        this.generateIceTimer = 0;
-        this.generateStars = 0;
-        this.score = 0;
-        this.shoot = 0;
+                // Instance variables
+                this.generateIceTimer = 0;
+                this.generateStars = 0;
+                this.score = 0;
+                this.shoot = 0;
 
-        // Start BGM
-        this.bgm = game.assets[bgmPath];
-        this.bgm.play();
+                // Start BGM
+                this.bgm = game.assets[bgmPath];
+                this.bgm.play();
+            },
+
+            handleTouchControl: function (evt) {
+                this.penguin.x = evt.x;
+                this.penguin.y = evt.y;
+                this.penguin.shoot();
+            },
+
+            update: function(evt) {
+
+                    // Check if it's time to create a new set of obstacles
+                    var delta = 2.0;
+                    this.generateIceTimer += evt.elapsed * 0.001;
+                    this.generateStars += evt.elapsed * 0.001;
+                    if(this.generateStars>= 0.5)
+                    {
+                        star = new Star();
+                        this.starGroup.addChild(star);
+                        this.generateStars=0;
+                    }
+                    if(this.generateIceTimer >= delta)
+                    {
+                        var ice;
+                        this.generateIceTimer -= delta;
+                        ice = new Ice();
+                        this.iceGroup.addChild(ice);
+                    }
+
+                    var game;
+                    game = Game.instance;
+
+                    // Check collision
+
+                    for (var k = this.projectilesGroup.childNodes.length - 1; k >= 0; k--){
+                        var iceProjectile;
+                        iceProjectile = this.projectilesGroup.childNodes[k];
+                        if(iceProjectile.intersect(this.penguin)){
+                            this.penguin.destroyed(iceProjectile);      
+                            break;
+                        }
+                    }
+                    for (var i = this.iceGroup.childNodes.length - 1; i >= 0; i--) {
+                        var ice;
+                        ice = this.iceGroup.childNodes[i];
+
+                        if(ice.intersect(this.penguin)){  
+                         this.penguin.destroyed(ice, JOUEUR);
+                         break;
+                     }
+
+                     for (var j = this.penguin.projectileGroup.childNodes.length - 1; j >= 0; j--){
+                       var projectile;
+                       projectile = this.penguin.projectileGroup.childNodes[j];
+                       if(projectile.intersect(ice)){
+                        ice.destroyed(projectile);
+                    }
+                }
+            }
+
+           // Loop BGM
+           if( this.bgm.currentTime >= this.bgm.duration ){
+            this.bgm.play();
+        }
     },
 
-    handleTouchControl: function (evt) {
-        this.penguin.x = evt.x;
-        this.penguin.y = evt.y;
-        this.penguin.shoot();
-    },
-
-    update: function(evt) {
-
-        // Check if it's time to create a new set of obstacles
-        var delta = 2.0;
-        this.generateIceTimer += evt.elapsed * 0.001;
-        this.generateStars += evt.elapsed * 0.001;
-        if(this.generateStars>= 0.5)
-        {
-            star = new Star();
-            this.starGroup.addChild(star);
-            this.generateStars=0;
-        }
-        if(this.generateIceTimer >= delta)
-        {
-            var ice;
-            this.generateIceTimer -= delta;
-            ice = new Ice();
-            this.iceGroup.addChild(ice);
-        }
-
-        var game;
-        game = Game.instance;
-
-        // Check collision
-
-        for (var k = this.projectilesGroup.childNodes.length - 1; k >= 0; k--){
-            var iceProjectile;
-            iceProjectile = this.projectilesGroup.childNodes[k];
-            if(iceProjectile.intersect(this.penguin)){
-                this.penguin.destroyed(iceProjectile);      
-                break;
-            }
-        }
-        for (var i = this.iceGroup.childNodes.length - 1; i >= 0; i--) {
-            var ice;
-            ice = this.iceGroup.childNodes[i];
-
-            if(ice.intersect(this.penguin)){  
-               this.penguin.destroyed(ice, JOUEUR);
-               break;
-           }
-
-           for (var j = this.penguin.projectileGroup.childNodes.length - 1; j >= 0; j--){
-             var projectile;
-             projectile = this.penguin.projectileGroup.childNodes[j];
-             if(projectile.intersect(ice)){
-                ice.destroyed(projectile);
-            }
-        }
-    }
-
-       // Loop BGM
-       if( this.bgm.currentTime >= this.bgm.duration ){
-        this.bgm.play();
-    }
-},
-
-setScore: function (value) {
-    this.score = value;
-    this.scoreLabel.text = 'Score: ' + this.score;
-} ,  
-setShoot: function (value) {
-    this.shoot = value;
-    this.shooting.text = 'Shooting: ' + this.shoot;
-}  
+    setScore: function (value) {
+        this.score = value;
+        this.scoreLabel.text = 'Score: ' + this.score;
+    } ,  
+    setShoot: function (value) {
+        this.shoot = value;
+        this.shooting.text = 'Shooting: ' + this.shoot;
+    } 
 });
 
 /**
@@ -231,38 +259,38 @@ setShoot: function (value) {
 
 
     onenterframe: function() {
-        //04.2 Keyboard Input
-        var game = Game.instance;
-        if (game.input.left && !game.input.right && this.x>0) {
-            this.tx = this.x -= moveSpeed;
-        } else if (game.input.right && !game.input.left && this.x+this.width<game.width) {
-            this.tx = this.x += moveSpeed;
+            //04.2 Keyboard Input
+            var game = Game.instance;
+            if (game.input.left && !game.input.right && this.x>0) {
+                this.tx = this.x -= moveSpeed;
+            } else if (game.input.right && !game.input.left && this.x+this.width<game.width) {
+                this.tx = this.x += moveSpeed;
+            }
+
+            if (game.input.up && !game.input.down && this.y>0) {
+                this.ty = this.y -= moveSpeed;
+            } else if (game.input.down && !game.input.up && this.y+this.height<game.height) {
+                this.ty = this.y += moveSpeed;
+            }
+
+            //shoot
+            if(game.input.a && this.shootPossible==true){
+              this.shoot();
+          }       
+      },
+
+      canShoot: function(evt) {
+        var delta=0.15;
+        this.shootDuration = this.shootDuration +evt.elapsed * 0.001;       
+        if(this.shootDuration >= delta) {
+            this.shootPossible = true;
         }
+        else{
+         this.shootPossible = false;
+     }
+ },
 
-        if (game.input.up && !game.input.down && this.y>0) {
-            this.ty = this.y -= moveSpeed;
-        } else if (game.input.down && !game.input.up && this.y+this.height<game.height) {
-            this.ty = this.y += moveSpeed;
-        }
-
-        //shoot
-        if(game.input.a && this.shootPossible==true){
-          this.shoot();
-      }       
-  },
-
-  canShoot: function(evt) {
-    var delta=0.15;
-    this.shootDuration = this.shootDuration +evt.elapsed * 0.001;       
-    if(this.shootDuration >= delta) {
-        this.shootPossible = true;
-    }
-    else{
-       this.shootPossible = false;
-   }
-},
-
-shoot: function(){
+ shoot: function(){
     var p = new Projectile(this.x, this.y, JOUEUR);
     this.projectileGroup.addChild(p);
     this.shootDuration = 0 ;
@@ -277,7 +305,6 @@ destroyed: function(proj) {
     proj.parentNode.removeChild(proj);
     game.assets[hitPath].play();
     this.parentNode.removeChild(this);
-
 }
 
 });
@@ -365,8 +392,8 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
             this.x = x+30-(this.width)/2;
         }
         else if(this.camp == 2){
-           this.y = y+30; 
-           this.x = x+30-(this.width)/2;
+         this.y = y+30; 
+         this.x = x+30-(this.width)/2;
            this.angleX=Math.floor(Math.random()*2);//Math.random()*4-2;
            if(this.angleX==0)
             this.angleX=-1;
@@ -381,14 +408,14 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
         if(this.camp == 1){//joueur
             this.moveBy(0, -6, 0);
             if(this.y<this.parentNode.parentNode.y-50){
-               this.parentNode.removeChild(this);
-           }
-       }
-       else if(this.camp == 2){
+             this.parentNode.removeChild(this);
+         }
+     }
+     else if(this.camp == 2){
         this.y+=this.angleY;
         this.x+=this.angleX;
         if(this.y>this.parentNode.parentNode.height){
-           this.parentNode.removeChild(this);   
+         this.parentNode.removeChild(this);   
         //           
     }
 }
@@ -448,7 +475,7 @@ var Star = enchant.Class.create(enchant.Sprite, {
     update: function(evt) {
         this.moveBy(0, this.vitesse, 0);
         if(this.y>this.parentNode.parentNode.height){
-           this.parentNode.removeChild(this);
+         this.parentNode.removeChild(this);
            //console.log('sta DESTROY')
        }
    }
