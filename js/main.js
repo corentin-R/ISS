@@ -21,21 +21,20 @@ window.onload = function() {
     // Starting point
     var game = new Game(350, 500);
     game.preload('res/BG.png',
-     playerSheetPath,
-     enemy1SheetPath,
-     projectileSheetPath,
-     starSheetPath,
-     'res/Hit.mp3',
-     bgmPath,
-     gameOverPath,
-     hitPath,
-     explosionSheetPath);
+       playerSheetPath,
+       enemy1SheetPath,
+       projectileSheetPath,
+       starSheetPath,
+       'res/Hit.mp3',
+       bgmPath,
+       gameOverPath,
+       hitPath,
+       explosionSheetPath);
 
     game.fps = 60;
     game.scale = 1;
     game.onload = function() {
         // Once Game finish loading
-        console.log("Hi, Space!");
         scene = new SceneGame();
         game.pushScene(scene);
     }
@@ -159,18 +158,18 @@ window.onload = function() {
             ice = this.iceGroup.childNodes[i];
 
             if(ice.intersect(this.penguin)){  
-             this.penguin.destroyed(ice, JOUEUR);
-             break;
-         }
+               this.penguin.destroyed(ice, JOUEUR);
+               break;
+           }
 
-         for (var j = this.penguin.projectileGroup.childNodes.length - 1; j >= 0; j--){
-           var projectile;
-           projectile = this.penguin.projectileGroup.childNodes[j];
-           if(projectile.intersect(ice)){
-            ice.destroyed(projectile);
+           for (var j = this.penguin.projectileGroup.childNodes.length - 1; j >= 0; j--){
+             var projectile;
+             projectile = this.penguin.projectileGroup.childNodes[j];
+             if(projectile.intersect(ice)){
+                ice.destroyed(projectile);
+            }
         }
     }
-}
 
        // Loop BGM
        if( this.bgm.currentTime >= this.bgm.duration ){
@@ -234,15 +233,15 @@ setShoot: function (value) {
     onenterframe: function() {
         //04.2 Keyboard Input
         var game = Game.instance;
-        if (game.input.left && !game.input.right) {
+        if (game.input.left && !game.input.right && this.x>0) {
             this.tx = this.x -= moveSpeed;
-        } else if (game.input.right && !game.input.left) {
+        } else if (game.input.right && !game.input.left && this.x+this.width<game.width) {
             this.tx = this.x += moveSpeed;
         }
 
-        if (game.input.up && !game.input.down) {
+        if (game.input.up && !game.input.down && this.y>0) {
             this.ty = this.y -= moveSpeed;
-        } else if (game.input.down && !game.input.up) {
+        } else if (game.input.down && !game.input.up && this.y+this.height<game.height) {
             this.ty = this.y += moveSpeed;
         }
 
@@ -259,8 +258,8 @@ setShoot: function (value) {
         this.shootPossible = true;
     }
     else{
-     this.shootPossible = false;
- }
+       this.shootPossible = false;
+   }
 },
 
 shoot: function(){
@@ -273,11 +272,12 @@ shoot: function(){
 
 destroyed: function(proj) {
     var game = Game.instance;
-    this.parentNode.projectilesGroup.removeChild(proj);
-    game.assets[hitPath].play();
     explo = new Explostion(this.x, this.y, JOUEUR);
     this.parentNode.addChild(explo);
+    proj.parentNode.removeChild(proj);
+    game.assets[hitPath].play();
     this.parentNode.removeChild(this);
+
 }
 
 });
@@ -321,7 +321,8 @@ destroyed: function(proj) {
 
         if(this.y > game.height)
         {
-            this.parentNode.removeChild(this);          
+            this.parentNode.removeChild(this);  
+            //console.log('dcfnv')        
         }
         this.shoot(evt);
     },
@@ -344,7 +345,8 @@ destroyed: function(proj) {
         game.assets[hitPath].play();
         explo = new Explostion(this.x, this.y, ENNEMY);
         this.parentNode.parentNode.addChild(explo);
-        this.parentNode.parentNode.iceGroup.removeChild(this);
+        this.parentNode.removeChild(this);
+
     }
 });
 
@@ -363,8 +365,8 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
             this.x = x+30-(this.width)/2;
         }
         else if(this.camp == 2){
-         this.y = y+30; 
-         this.x = x+30-(this.width)/2;
+           this.y = y+30; 
+           this.x = x+30-(this.width)/2;
            this.angleX=Math.floor(Math.random()*2);//Math.random()*4-2;
            if(this.angleX==0)
             this.angleX=-1;
@@ -378,18 +380,18 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
     update: function(evt) {
         if(this.camp == 1){//joueur
             this.moveBy(0, -6, 0);
-            if(this.y<this.parentNode.y-50){
-             this.parentNode.removeChild(this);
-             console.log('DESTROY!!')
-         }
-     }
-     else if(this.camp == 2){
+            if(this.y<this.parentNode.parentNode.y-50){
+               this.parentNode.removeChild(this);
+           }
+       }
+       else if(this.camp == 2){
         this.y+=this.angleY;
         this.x+=this.angleX;
-        if(this.y>this.parentNode.height){
-         this.parentNode.removeChild(this);             
-     }
- }
+        if(this.y>this.parentNode.parentNode.height){
+           this.parentNode.removeChild(this);   
+        //           
+    }
+}
 }
 });
 
@@ -445,11 +447,11 @@ var Star = enchant.Class.create(enchant.Sprite, {
 
     update: function(evt) {
         this.moveBy(0, this.vitesse, 0);
-        if(this.y>this.parentNode.height){
-         this.parentNode.removeChild(this);
-         console.log('sta DESTROY')
-     }
- }
+        if(this.y>this.parentNode.parentNode.height){
+           this.parentNode.removeChild(this);
+           //console.log('sta DESTROY')
+       }
+   }
 
 });
 /**
@@ -489,11 +491,12 @@ var Star = enchant.Class.create(enchant.Sprite, {
         shootLabel.font = '24px strong';
         shootLabel.textAlign = 'center';
 
-
         var nombre = score/shoot*100;
         arrondi = nombre*100;          // 556.845
         arrondi = Math.round(arrondi); // 556
         arrondi = arrondi/100;         // 5.56
+        if(shoot==0)
+            arrondi=0;
         ratioLabel = new Label('RATIO: ' +arrondi + '%');
         ratioLabel.x = game.width/2-ratioLabel.width/2;
         ratioLabel.y = game.height/2+4*20;        
@@ -507,12 +510,12 @@ var Star = enchant.Class.create(enchant.Sprite, {
         this.addChild(ratioLabel);
 
         this.addEventListener(Event.INPUT_CHANGE, this.touchToRestart);
-},
+    },
 
-touchToRestart: function(evt) {
-    var game = Game.instance;
-    this.gom.stop();
-    scene = new SceneGame();
-    game.replaceScene(scene);
-}
+    touchToRestart: function(evt) {
+        var game = Game.instance;
+        this.gom.stop();
+        scene = new SceneGame();
+        game.replaceScene(scene);
+    }
 });
