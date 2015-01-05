@@ -8,6 +8,9 @@ var scene ;
 
 var playerSheetPath = 'res/playerSheet.png';
 var enemy1SheetPath = 'res/enemy1Sheet.png';
+var enemy2SheetPath = 'res/enemy2Sheet.png';
+var enemy3SheetPath = 'res/enemy3Sheet.png';
+var enemy4SheetPath = 'res/enemy4Sheet.png';
 var projectileSheetPath = 'res/projectile.png';
 var starSheetPath = 'res/star.png';
 var explosionSheetPath = 'res/explosionSheet.png';
@@ -27,7 +30,7 @@ window.onload = function() {
 
         console.log("Cette fenêtre fait " + larg + " de large et "+haut+" de haut"); 
         var hauteurBase = 620;
-        var largeurBase = 420;
+        var largeurBase = 400;
 
         // Starting point
 
@@ -47,6 +50,9 @@ window.onload = function() {
         game.preload('res/BG.png',
          playerSheetPath,
          enemy1SheetPath,
+         enemy2SheetPath,
+         enemy3SheetPath,
+         enemy4SheetPath,
          projectileSheetPath,
          starSheetPath,
          'res/Hit.mp3',
@@ -116,6 +122,7 @@ window.onload = function() {
                 projectilesGroup = new Group();
                 this.projectilesGroup = projectilesGroup;
 
+
                 starGroup = new Group();
                 this.starGroup = starGroup;
 
@@ -136,6 +143,12 @@ window.onload = function() {
                 this.generateStars = 0;
                 this.score = 0;
                 this.shoot = 0;
+                this.vitesseEnnemy = 7;
+                this.vitesseProjCarre = 16;
+                this.deltaShoot = 1.6;
+                this.deltaAppartion = 2.0;
+                this.deltaAppartionStar = 0.8;
+
 
                 // Start BGM
                 this.bgm = game.assets[bgmPath];
@@ -149,22 +162,68 @@ window.onload = function() {
             },
 
             update: function(evt) {
-
-                    // Check if it's time to create a new set of obstacles
-                    var delta = 2.0;
+                    
                     this.generateIceTimer += evt.elapsed * 0.001;
                     this.generateStars += evt.elapsed * 0.001;
-                    if(this.generateStars>= 0.5)
+                    if(this.generateStars>= this.deltaAppartionStar)
                     {
                         star = new Star();
                         this.starGroup.addChild(star);
                         this.generateStars=0;
+                        if(this.score>=15 && this.score<30){
+                            this.deltaAppartionStar = 0.4;
+                        }
+                        else if(this.score>=30){
+                            this.deltaAppartionStar = 0.1;
+                        }
+
                     }
-                    if(this.generateIceTimer >= delta)
+                    if(this.generateIceTimer >= this.deltaAppartion)
                     {
                         var ice;
-                        this.generateIceTimer -= delta;
-                        ice = new Ice();
+                        this.generateIceTimer = 0;
+
+                        
+
+                        if(this.deltaShoot>0.19)
+                            this.deltaShoot -= 0.02;
+
+                          if(this.score<15){
+                            ice = new Ice(4,1, this.deltaShoot, this.vitesseProjCarre);
+                        }
+                        else if(this.score>=15 && this.score<30){
+                            if(this.deltaAppartion>0.75)
+                                this.deltaAppartion -= 0.029;
+                            ice = new Ice(5,Math.floor(Math.random()*2)+1, this.deltaShoot, this.vitesseProjCarre);
+                        }
+                        else if(this.score>=30 && this.score<45){
+                            if(this.deltaAppartion>0.75)
+                                this.deltaAppartion -= 0.029;
+                            if(this.vitesseEnnemy<16)
+                                    this.vitesseEnnemy+=0.1;
+                            ice = new Ice(this.vitesseEnnemy,Math.floor(Math.random()*3)+1, this.deltaShoot, this.vitesseProjCarre); 
+                        }
+                        else if(this.score>=45 && this.score<55){
+                            if(this.deltaAppartion>0.75)
+                                this.deltaAppartion -= 0.023;
+                        
+                            if(this.vitesseEnnemy<16)
+                                    this.vitesseEnnemy+=0.1;
+                          
+                           ice = new Ice(this.vitesseEnnemy,Math.floor(Math.random()*4)+1, this.deltaShoot, this.vitesseProjCarre); 
+                        }
+                        else{
+                            if(this.deltaAppartion>0.75)
+                                this.deltaAppartion -= 0.023;
+
+                            if(this.vitesseEnnemy<11)
+                                this.vitesseEnnemy+=0.15;
+
+                            if(this.vitesseProjCarre<30)
+                                this.vitesseProjCarre += 0.5;
+                            ice = new Ice(this.vitesseEnnemy,Math.floor(Math.random()*4)+1, this.deltaShoot, this.vitesseProjCarre);
+                        }
+                        
                         this.iceGroup.addChild(ice);
                     }
 
@@ -228,7 +287,7 @@ window.onload = function() {
         var shootDuration;
         var shootPossible = true;
         // Call superclass constructor
-        Sprite.apply(this,[60, 83]);
+        Sprite.apply(this,[51, 70]);
         this.image = Game.instance.assets[playerSheetPath];        
         this.animationDuration = 0;
         this.shootDuration = 0;
@@ -280,7 +339,7 @@ window.onload = function() {
       },
 
       canShoot: function(evt) {
-        var delta=0.15;
+        var delta=0.22;
         this.shootDuration = this.shootDuration +evt.elapsed * 0.001;       
         if(this.shootDuration >= delta) {
             this.shootPossible = true;
@@ -291,7 +350,7 @@ window.onload = function() {
  },
 
  shoot: function(){
-    var p = new Projectile(this.x, this.y, JOUEUR);
+    var p = new Projectile(this.x, this.y, this.width, JOUEUR);
     this.projectileGroup.addChild(p);
     this.shootDuration = 0 ;
     this.parentNode.shoot++;
@@ -316,35 +375,75 @@ destroyed: function(proj) {
     /**
      * The obstacle that the penguin must avoid
      */
-     initialize: function() {
-        // Call superclass constructor
-        Sprite.apply(this,[60, 56]);
-
+     initialize: function(vitesse, type, deltaShoot, vitesseProjoCarre) {
 
         this.animationDuration = 0;
-        this.delta=0.2;
+        this.delta=0.1;
+        this.deltaBase = deltaShoot;
+        this.vitesseProjCarre = vitesseProjoCarre;
 
-        this.image  = Game.instance.assets[enemy1SheetPath];      
+         switch(type){
+            case 1:
+                Sprite.apply(this,[60, 56]);
+                this.image  = Game.instance.assets[enemy1SheetPath];
+            break;
+            case 2:
+                Sprite.apply(this,[85, 67]);
+                this.image  = Game.instance.assets[enemy2SheetPath];                
+            break;
+            case 3:
+                Sprite.apply(this,[104, 78]);
+                this.image  = Game.instance.assets[enemy3SheetPath];
+            break;
+            case 4:
+                Sprite.apply(this,[72, 68]);
+                this.image  = Game.instance.assets[enemy4SheetPath];
+            break;
+            default:
+                 Sprite.apply(this,[85, 67]);
+                this.image  = Game.instance.assets[enemy2SheetPath];
+            break;
+         } 
+
+        this.typee = type;
+        this.vitesse=vitesse;
+
         this.rotationSpeed = 0;
         this.setLane();
         this.addEventListener(Event.ENTER_FRAME, this.update);
+        this.cpt=0;
+        this.dir=this.angleX=Math.random()*2-1;
     },
 
     setLane: function() {
         var game, distance;
         game = Game.instance;        
 
-        this.x = this.width/2 + Math.floor(Math.random()*(game.width))-this.width;
-        this.y = -this.height;    
+        this.x = this.width/2 + Math.floor(Math.random()*(game.width-10)+5)-this.width;
+        this.y = -this.height/1.75;    
     },
 
     update: function(evt) { 
         var ySpeed, game;
 
         game = Game.instance;
-        ySpeed = moveSpeed*20;
-
+        ySpeed = this.vitesse*20;
         this.y += ySpeed * evt.elapsed * 0.001;
+
+        if(this.typee==4){
+            if(this.dir>0){
+                this.x -=1.5;
+            }
+            else{
+                this.x +=1.5;
+            }
+            
+            this.cpt++;
+            if(this.cpt==100 || this.x<-10 || this.x+this.height>game.width+10){
+                this.dir=-this.dir;
+                this.cpt=0;
+            }
+        }
 
         if(this.y > game.height)
         {
@@ -359,9 +458,10 @@ destroyed: function(proj) {
         this.animationDuration += evt.elapsed * 0.001;       
         if(this.animationDuration >=  this.delta)
         {
-            var p = new Projectile(this.x, this.y, ENNEMY);
+            //console.log(this.vitesseProjCarre)
+            var p = new Projectile(this.x, this.y, this.width, ENNEMY, this.vitesseProjCarre, this.typee);
             this.parentNode.parentNode.projectilesGroup.addChild(p);
-            this.delta = (Math.random() * 1.3) + 0.7; 
+            this.delta = (Math.random() * this.deltaBase*1.5) + this.deltaBase/1.5; 
             this.animationDuration = 0;
         }
     },
@@ -379,27 +479,53 @@ destroyed: function(proj) {
 
 var Projectile = enchant.Class.create(enchant.Sprite, {
 
-    initialize: function(x,y, faction)
+    /**type:
+        1- sur les cotés angle fixe
+        2- tout droit
+        3- angle random
+    **/
+    initialize: function(x,y, parentWidth, faction, vitesse, type)
     {
-        var vitesse = 7;
+        //this.vitesse = vitesse;
         var game = Game.instance;
         this.camp = faction;
         Sprite.apply(this,[12, 12]);
         this.image = Game.instance.assets[ projectileSheetPath]; // set image
         
-        if(this.camp == 1){//joueur
-            this.y = y-this.height/2;
-            this.x = x+30-(this.width)/2;
-        }
-        else if(this.camp == 2){
-         this.y = y+30; 
-         this.x = x+30-(this.width)/2;
-           this.angleX=Math.floor(Math.random()*2);//Math.random()*4-2;
-           if(this.angleX==0)
-            this.angleX=-1;
-        this.angleY=Math.sqrt(16-Math.pow(this.angleX,2));
-    }
+        this.y = y+5; 
+         this.x = x+parentWidth/2-(this.width)/2;
 
+         //console.log(vitesse);
+
+        if(this.camp == 2){
+         
+         //console.log(type)
+         switch(type){
+            case 1:
+                this.angleX=Math.floor(Math.random()*2);//Math.random()*4-2;
+                if(this.angleX==0)
+                    this.angleX=-1;
+                this.angleY=Math.sqrt(vitesse-Math.pow(this.angleX,2));
+            break;
+            case 2:
+                this.angleX=0
+                this.angleY=Math.sqrt(vitesse);
+            break;
+            case 3:
+                this.angleX=Math.random()*4-2;
+                this.angleY=Math.sqrt(vitesse-Math.pow(this.angleX,2));
+            break;
+            case 4:
+                this.angleX=Math.random()*2-1;
+                this.angleY=Math.sqrt(vitesse-Math.pow(this.angleX,2));
+            break;
+            default:
+                this.angleX=0
+                this.angleY=Math.sqrt(vitesse);
+            break;
+
+         }    
+    }
         this.frame = 15;                   // set image data
         this.addEventListener(Event.ENTER_FRAME,this.update);
     },
