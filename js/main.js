@@ -15,9 +15,12 @@ var projectileSheetPath = 'res/projectile.png';
 var starSheetPath = 'res/star.png';
 var explosionSheetPath = 'res/explosionSheet.png';
 
+var FCIPath ='res/logo-furious-cat-interactive.png'
+
 var bgmPath = 'res/commandoSteve.ogg';
 var hitPath = 'res/hit2.ogg';
 var gameOverPath = 'res/gameOver.ogg';
+var shootPath = 'res/shoot.mp3';
 
 var JOUEUR = 1;
 var ENNEMY  = 2;
@@ -36,43 +39,63 @@ window.onload = function() {
 
         var scale;
         if(larg<largeurBase){
+            scale = larg/largeurBase;
+            hauteurBase=haut/scale;
+        }
+        else if(haut<hauteurBase && haut/larg>4/3){
+            scale = haut/hauteurBase; 
+            largeurBase=larg/scale;               
+        }
+        else if(haut<hauteurBase && !(haut/larg>4/3)){
+            scale = haut/hauteurBase;            
+        }
+        else if(haut/larg>4/3){
+            if(larg>largeurBase && haut>hauteurBase){
+                scale = haut/hauteurBase; 
+                largeurBase=larg/scale; 
+            }
+            else if(larg>largeurBase && !(haut>hauteurBas)){
                 scale = larg/largeurBase;
                 hauteurBase=haut/scale;
-         }
-         else if(haut<hauteurBase){
-                scale = haut/hauteurBase;                
-         }
+            }
+            else if(!(larg>largeurBase) && haut>hauteurBas){
+                scale = haut/hauteurBase; 
+                largeurBase=larg/scale; 
+            }   
+        }
         else{
-                scale=1;
+            scale=1;
         }
 
         var game = new Game(largeurBase, hauteurBase);
-        game.preload('res/BG.png',
-         playerSheetPath,
-         enemy1SheetPath,
-         enemy2SheetPath,
-         enemy3SheetPath,
-         enemy4SheetPath,
-         projectileSheetPath,
-         starSheetPath,
-         'res/Hit.mp3',
-         bgmPath,
-         gameOverPath,
-         hitPath,
-         explosionSheetPath);
+        game.preload(
+           playerSheetPath,
+           enemy1SheetPath,
+           enemy2SheetPath,
+           enemy3SheetPath,
+           enemy4SheetPath,
+           projectileSheetPath,
+           starSheetPath,
+           'res/Hit.mp3',
+           bgmPath,
+           gameOverPath,
+           hitPath,
+           shootPath,
+           explosionSheetPath,
+           FCIPath);
 
         game.fps = 60;
         game.scale=scale;
         game.onload = function() {
                 // Once Game finish loading
-                scene = new SceneGame();
+                scene = new SceneMenu(); //Bootspash();
                 game.pushScene(scene);
                 //scene.moveTo(50, 100); 
-        }
-        window.scrollTo(0,0);
-        game.start();  
-        
-    };
+            }
+            window.scrollTo(0,0);
+            game.start();  
+
+        };
 
 /**
  * SceneGame  
@@ -97,7 +120,7 @@ window.onload = function() {
                 label.x = 5;
                 label.y = 5;        
                 label.color = 'white';
-                label.font = '20px strong';
+                label.font = '25px strong';
                 label.textAlign = 'left';
                 label._style.textShadow ="-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
                 this.scoreLabel = label;        
@@ -106,7 +129,7 @@ window.onload = function() {
                 shooting.x = game.width-shooting.width-7;
                 shooting.y = 5;        
                 shooting.color = 'white';
-                shooting.font = '20px strong';
+                shooting.font = '25px strong';
                 shooting.textAlign = 'right';
                 shooting._style.textShadow ="-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
                 this.shooting = shooting;   
@@ -126,6 +149,7 @@ window.onload = function() {
                 starGroup = new Group();
                 this.starGroup = starGroup;
 
+
                 //attention à l'ordre!!!!
                 this.addChild(this.starGroup);
                 this.addChild(projectilesGroup);
@@ -135,8 +159,9 @@ window.onload = function() {
                 this.addChild(label);
                 this.addChild(shooting);
 
-                this.addEventListener(Event.TOUCH_START,this.handleTouchControl);
+                this.addEventListener('touchmove',this.handleTouchControl);
                 this.addEventListener(Event.ENTER_FRAME,this.update);
+                //this.addEventListener(Event.TOUCH_START,game.pause());
 
                 // Instance variables
                 this.generateIceTimer = 0;
@@ -156,79 +181,79 @@ window.onload = function() {
             },
 
             handleTouchControl: function (evt) {
-                this.penguin.x = evt.x;
-                this.penguin.y = evt.y;
-                this.penguin.shoot();
+                this.penguin.x = evt.x-this.penguin.width/2;
+                this.penguin.y = evt.y-this.penguin.height/2;
+                if(this.penguin.shootPossible==true){
+                    this.penguin.shoot();
+                }
             },
 
             update: function(evt) {
-                    
-                    this.generateIceTimer += evt.elapsed * 0.001;
-                    this.generateStars += evt.elapsed * 0.001;
-                    if(this.generateStars>= this.deltaAppartionStar)
-                    {
-                        star = new Star();
-                        this.starGroup.addChild(star);
-                        this.generateStars=0;
-                        if(this.score>=15 && this.score<30){
-                            this.deltaAppartionStar = 0.4;
-                        }
-                        else if(this.score>=30){
-                            this.deltaAppartionStar = 0.1;
-                        }
 
+                this.generateIceTimer += evt.elapsed * 0.001;
+                this.generateStars += evt.elapsed * 0.001;
+                if(this.generateStars>= this.deltaAppartionStar)
+                {
+                    star = new Star();
+                    this.starGroup.addChild(star);
+                    this.generateStars=0;
+                    if(this.score>=15 && this.score<30){
+                        this.deltaAppartionStar = 0.6;
                     }
-                    if(this.generateIceTimer >= this.deltaAppartion)
-                    {
-                        var ice;
-                        this.generateIceTimer = 0;
-
-                        
-
-                        if(this.deltaShoot>0.19)
-                            this.deltaShoot -= 0.02;
-
-                          if(this.score<15){
-                            ice = new Ice(4,1, this.deltaShoot, this.vitesseProjCarre);
-                        }
-                        else if(this.score>=15 && this.score<30){
-                            if(this.deltaAppartion>0.75)
-                                this.deltaAppartion -= 0.029;
-                            ice = new Ice(5,Math.floor(Math.random()*2)+1, this.deltaShoot, this.vitesseProjCarre);
-                        }
-                        else if(this.score>=30 && this.score<45){
-                            if(this.deltaAppartion>0.75)
-                                this.deltaAppartion -= 0.029;
-                            if(this.vitesseEnnemy<16)
-                                    this.vitesseEnnemy+=0.1;
-                            ice = new Ice(this.vitesseEnnemy,Math.floor(Math.random()*3)+1, this.deltaShoot, this.vitesseProjCarre); 
-                        }
-                        else if(this.score>=45 && this.score<55){
-                            if(this.deltaAppartion>0.75)
-                                this.deltaAppartion -= 0.023;
-                        
-                            if(this.vitesseEnnemy<16)
-                                    this.vitesseEnnemy+=0.1;
-                          
-                           ice = new Ice(this.vitesseEnnemy,Math.floor(Math.random()*4)+1, this.deltaShoot, this.vitesseProjCarre); 
-                        }
-                        else{
-                            if(this.deltaAppartion>0.75)
-                                this.deltaAppartion -= 0.023;
-
-                            if(this.vitesseEnnemy<11)
-                                this.vitesseEnnemy+=0.15;
-
-                            if(this.vitesseProjCarre<30)
-                                this.vitesseProjCarre += 0.5;
-                            ice = new Ice(this.vitesseEnnemy,Math.floor(Math.random()*4)+1, this.deltaShoot, this.vitesseProjCarre);
-                        }
-                        
-                        this.iceGroup.addChild(ice);
+                    else if(this.score>=30){
+                        this.deltaAppartionStar = 0.4;
                     }
 
-                    var game;
-                    game = Game.instance;
+                }
+                if(this.generateIceTimer >= this.deltaAppartion)
+                {
+                    var ice;
+                    this.generateIceTimer = 0;
+
+                    if(this.deltaShoot>0.12)
+                        this.deltaShoot -= 0.025;
+
+                    if(this.score<15){
+                        ice = new Ice(4,1, this.deltaShoot, this.vitesseProjCarre);
+                    }
+                    else if(this.score>=15 && this.score<30){
+                        if(this.deltaAppartion>0.6)
+                            this.deltaAppartion -= 0.029;
+                        ice = new Ice(5,Math.floor(Math.random()*2)+1, this.deltaShoot, this.vitesseProjCarre);
+                    }
+                    else if(this.score>=30 && this.score<45){
+                        if(this.deltaAppartion>0.6)
+                            this.deltaAppartion -= 0.029;
+                        if(this.vitesseEnnemy<16)
+                            this.vitesseEnnemy+=0.1;
+                        ice = new Ice(this.vitesseEnnemy,Math.floor(Math.random()*3)+1, this.deltaShoot, this.vitesseProjCarre); 
+                    }
+                    else if(this.score>=45 && this.score<55){
+                        if(this.deltaAppartion>0.6)
+                            this.deltaAppartion -= 0.03;
+                        
+                        if(this.vitesseEnnemy<16)
+                            this.vitesseEnnemy+=0.1;
+
+                        ice = new Ice(this.vitesseEnnemy,Math.floor(Math.random()*4)+1, this.deltaShoot, this.vitesseProjCarre); 
+                    }
+                    else{
+                        if(this.deltaAppartion>0.6)
+                            this.deltaAppartion -= 0.025;
+
+                        if(this.vitesseEnnemy<11)
+                            this.vitesseEnnemy+=0.15;
+
+                        if(this.vitesseProjCarre<128)
+                            this.vitesseProjCarre += 0.8;
+                        ice = new Ice(this.vitesseEnnemy,Math.floor(Math.random()*4)+1, this.deltaShoot, this.vitesseProjCarre);
+                    }
+
+                    this.iceGroup.addChild(ice);
+                }
+
+                var game;
+                game = Game.instance;
 
                     // Check collision
 
@@ -245,18 +270,18 @@ window.onload = function() {
                         ice = this.iceGroup.childNodes[i];
 
                         if(ice.intersect(this.penguin)){  
-                         this.penguin.destroyed(ice, JOUEUR);
-                         break;
-                     }
+                           this.penguin.destroyed(ice, JOUEUR);
+                           break;
+                       }
 
-                     for (var j = this.penguin.projectileGroup.childNodes.length - 1; j >= 0; j--){
-                       var projectile;
-                       projectile = this.penguin.projectileGroup.childNodes[j];
-                       if(projectile.intersect(ice)){
-                        ice.destroyed(projectile);
+                       for (var j = this.penguin.projectileGroup.childNodes.length - 1; j >= 0; j--){
+                         var projectile;
+                         projectile = this.penguin.projectileGroup.childNodes[j];
+                         if(projectile.intersect(ice) && ice.y>-1*ice.height/3){
+                            ice.destroyed1(projectile);
+                        }
                     }
                 }
-            }
 
            // Loop BGM
            if( this.bgm.currentTime >= this.bgm.duration ){
@@ -291,7 +316,7 @@ window.onload = function() {
         this.image = Game.instance.assets[playerSheetPath];        
         this.animationDuration = 0;
         this.shootDuration = 0;
-        this.addEventListener(Event.ENTER_FRAME, this.updateAnimation);
+        //this.addEventListener(Event.ENTER_FRAME, this.updateAnimation);
         this.addEventListener(Event.ENTER_FRAME, this.canShoot);
 
         projectileGroup = new Group();
@@ -345,25 +370,26 @@ window.onload = function() {
             this.shootPossible = true;
         }
         else{
-         this.shootPossible = false;
-     }
- },
+           this.shootPossible = false;
+       }
+   },
 
- shoot: function(){
+   shoot: function(){
     var p = new Projectile(this.x, this.y, this.width, JOUEUR);
     this.projectileGroup.addChild(p);
     this.shootDuration = 0 ;
     this.parentNode.shoot++;
     this.parentNode.setShoot(this.parentNode.shoot);
+    Game.instance.assets[shootPath].play();
 },
 
 destroyed: function(proj) {
     var game = Game.instance;
-    explo = new Explostion(this.x, this.y, JOUEUR);
+    explo = new Explostion(this.x, this.y, JOUEUR, this.width);
     this.parentNode.addChild(explo);
     proj.parentNode.removeChild(proj);
     game.assets[hitPath].play();
-    this.parentNode.removeChild(this);
+
 }
 
 });
@@ -381,29 +407,30 @@ destroyed: function(proj) {
         this.delta=0.1;
         this.deltaBase = deltaShoot;
         this.vitesseProjCarre = vitesseProjoCarre;
+        this.actuallyDestoyed = false;
 
-         switch(type){
+        switch(type){
             case 1:
-                Sprite.apply(this,[60, 56]);
-                this.image  = Game.instance.assets[enemy1SheetPath];
+            Sprite.apply(this,[60, 56]);
+            this.image  = Game.instance.assets[enemy1SheetPath];
             break;
             case 2:
-                Sprite.apply(this,[85, 67]);
-                this.image  = Game.instance.assets[enemy2SheetPath];                
+            Sprite.apply(this,[85, 67]);
+            this.image  = Game.instance.assets[enemy2SheetPath];                
             break;
             case 3:
-                Sprite.apply(this,[104, 78]);
-                this.image  = Game.instance.assets[enemy3SheetPath];
+            Sprite.apply(this,[104, 78]);
+            this.image  = Game.instance.assets[enemy3SheetPath];
             break;
             case 4:
-                Sprite.apply(this,[72, 68]);
-                this.image  = Game.instance.assets[enemy4SheetPath];
+            Sprite.apply(this,[72, 68]);
+            this.image  = Game.instance.assets[enemy4SheetPath];
             break;
             default:
-                 Sprite.apply(this,[85, 67]);
-                this.image  = Game.instance.assets[enemy2SheetPath];
+            Sprite.apply(this,[85, 67]);
+            this.image  = Game.instance.assets[enemy2SheetPath];
             break;
-         } 
+        } 
 
         this.typee = type;
         this.vitesse=vitesse;
@@ -419,62 +446,64 @@ destroyed: function(proj) {
         var game, distance;
         game = Game.instance;        
 
-        this.x = this.width/2 + Math.floor(Math.random()*(game.width-10)+5)-this.width;
+        this.x =  Math.floor(Math.random()*(game.width-this.width));
         this.y = -this.height/1.75;    
     },
 
     update: function(evt) { 
-        var ySpeed, game;
+        if(this.actuallyDestoyed)
+            this.parentNode.removeChild(this);
+        else{
+            var ySpeed, game;
 
-        game = Game.instance;
-        ySpeed = this.vitesse*20;
-        this.y += ySpeed * evt.elapsed * 0.001;
+            game = Game.instance;
+            ySpeed = this.vitesse*20;
+            this.y += ySpeed * evt.elapsed * 0.001;
 
-        if(this.typee==4){
-            if(this.dir>0){
-                this.x -=1.5;
-            }
-            else{
-                this.x +=1.5;
-            }
-            
-            this.cpt++;
-            if(this.cpt==100 || this.x<-10 || this.x+this.height>game.width+10){
-                this.dir=-this.dir;
-                this.cpt=0;
-            }
-        }
+            if(this.typee==4){
+                if(this.dir>0){
+                    this.x -=1.5;
+                }
+                else{
+                    this.x +=1.5;
+                }
 
-        if(this.y > game.height)
-        {
-            this.parentNode.removeChild(this);  
+                this.cpt++;
+                if(this.cpt==100 || this.x<-10 || this.x+this.height>game.width+10){
+                    this.dir=-this.dir;
+                    this.cpt=0;
+                }
+            }
+
+            if(this.y > game.height)
+            {
+                this.parentNode.removeChild(this);  
             //console.log('dcfnv')        
         }
         this.shoot(evt);
-    },
-
-    shoot: function(evt) {
-
-        this.animationDuration += evt.elapsed * 0.001;       
-        if(this.animationDuration >=  this.delta)
-        {
-            //console.log(this.vitesseProjCarre)
-            var p = new Projectile(this.x, this.y, this.width, ENNEMY, this.vitesseProjCarre, this.typee);
-            this.parentNode.parentNode.projectilesGroup.addChild(p);
-            this.delta = (Math.random() * this.deltaBase*1.5) + this.deltaBase/1.5; 
-            this.animationDuration = 0;
-        }
-    },
-    destroyed: function(proj) {
-        var game = Game.instance;
-        this.parentNode.parentNode.setScore(this.parentNode.parentNode.score + 1);
-        this.parentNode.parentNode.penguin.projectileGroup.removeChild(proj);
-        game.assets[hitPath].play();
-        explo = new Explostion(this.x, this.y, ENNEMY);
-        this.parentNode.parentNode.addChild(explo);
-        this.parentNode.removeChild(this);
-
     }
+},
+
+shoot: function(evt) {
+
+    this.animationDuration += evt.elapsed * 0.001;       
+    if(this.animationDuration >=  this.delta)
+    {
+        var p = new Projectile(this.x, this.y, this.width, ENNEMY, this.vitesseProjCarre, this.typee);
+        this.parentNode.parentNode.projectilesGroup.addChild(p);
+        this.delta = (Math.random() * this.deltaBase*1.5) + this.deltaBase/1.5; 
+        this.animationDuration = 0;
+    }
+},
+destroyed1: function(proj) {
+    var game = Game.instance;
+    this.parentNode.parentNode.setScore(this.parentNode.parentNode.score + 1);
+    this.parentNode.parentNode.penguin.projectileGroup.removeChild(proj);
+    game.assets[hitPath].play();
+    explo = new Explostion(this.x, this.y, ENNEMY, this.width);
+    this.parentNode.parentNode.addChild(explo);
+    this.actuallyDestoyed = true;
+}
 });
 
 var Projectile = enchant.Class.create(enchant.Sprite, {
@@ -483,9 +512,9 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
         1- sur les cotés angle fixe
         2- tout droit
         3- angle random
-    **/
-    initialize: function(x,y, parentWidth, faction, vitesse, type)
-    {
+        **/
+        initialize: function(x,y, parentWidth, faction, vitesse, type)
+        {
         //this.vitesse = vitesse;
         var game = Game.instance;
         this.camp = faction;
@@ -493,12 +522,12 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
         this.image = Game.instance.assets[ projectileSheetPath]; // set image
         
         this.y = y+5; 
-         this.x = x+parentWidth/2-(this.width)/2;
+        this.x = x+parentWidth/2-(this.width)/2;
 
          //console.log(vitesse);
 
-        if(this.camp == 2){
-         
+         if(this.camp == 2){
+
          //console.log(type)
          switch(type){
             case 1:
@@ -506,26 +535,26 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
                 if(this.angleX==0)
                     this.angleX=-1;
                 this.angleY=Math.sqrt(vitesse-Math.pow(this.angleX,2));
-            break;
-            case 2:
+                break;
+                case 2:
                 this.angleX=0
                 this.angleY=Math.sqrt(vitesse);
-            break;
-            case 3:
+                break;
+                case 3:
                 this.angleX=Math.random()*4-2;
                 this.angleY=Math.sqrt(vitesse-Math.pow(this.angleX,2));
-            break;
-            case 4:
+                break;
+                case 4:
                 this.angleX=Math.random()*2-1;
                 this.angleY=Math.sqrt(vitesse-Math.pow(this.angleX,2));
-            break;
-            default:
+                break;
+                default:
                 this.angleX=0
                 this.angleY=Math.sqrt(vitesse);
-            break;
+                break;
 
-         }    
-    }
+            }    
+        }
         this.frame = 15;                   // set image data
         this.addEventListener(Event.ENTER_FRAME,this.update);
     },
@@ -534,14 +563,14 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
         if(this.camp == 1){//joueur
             this.moveBy(0, -6, 0);
             if(this.y<this.parentNode.parentNode.y-50){
-             this.parentNode.removeChild(this);
-         }
-     }
-     else if(this.camp == 2){
+               this.parentNode.removeChild(this);
+           }
+       }
+       else if(this.camp == 2){
         this.y+=this.angleY;
         this.x+=this.angleX;
         if(this.y>this.parentNode.parentNode.height){
-         this.parentNode.removeChild(this);   
+           this.parentNode.removeChild(this);   
         //           
     }
 }
@@ -550,12 +579,14 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
 
 var Explostion = enchant.Class.create(enchant.Sprite, {
 
-    initialize: function(x,y, faction) {
+    initialize: function(x,y, faction, tailleParent) {
         var game = Game.instance;
         Sprite.apply(this,[60, 60]);
         this.image = Game.instance.assets[explosionSheetPath]; // set image        
         this.y = y;
-        this.x = x;
+        var scalle=tailleParent/this.width;
+        this.x = x+tailleParent/2-(this.width/2);
+        this.scale(scalle,scalle);
         this.cpt=0;   
         this.faction=faction;              
         this.addEventListener(Event.ENTER_FRAME,this.update);
@@ -591,9 +622,9 @@ var Star = enchant.Class.create(enchant.Sprite, {
         this.image = Game.instance.assets[starSheetPath]; // set image        
         this.y = 0;
         this.x = Math.random()*game.width-this.width;
-        this.vitesse = Math.random()*2+7;
+        this.vitesse = Math.random()*4+9;
         this.frame = 15;                   // set image data
-        var scalee = Math.random()*0.45+0.10;
+        var scalee = Math.random()*0.55+0.10;
         this.scale(scalee,scalee);
         this.addEventListener(Event.ENTER_FRAME,this.update);
     },
@@ -601,7 +632,7 @@ var Star = enchant.Class.create(enchant.Sprite, {
     update: function(evt) {
         this.moveBy(0, this.vitesse, 0);
         if(this.y>this.parentNode.parentNode.height){
-         this.parentNode.removeChild(this);
+           this.parentNode.removeChild(this);
            //console.log('sta DESTROY')
        }
    }
@@ -623,7 +654,7 @@ var Star = enchant.Class.create(enchant.Sprite, {
         // Start BGM
         this.gom.play();
 
-        gameOverLabel = new Label("GAME OVER<br>Move to Restart");
+        gameOverLabel = new Label("GAME OVER<br>Tap to Restart");
         gameOverLabel.x = game.width/2-gameOverLabel.width/2;
         gameOverLabel.y = game.height/3-70;
         gameOverLabel.color = 'white';
@@ -662,13 +693,143 @@ var Star = enchant.Class.create(enchant.Sprite, {
         this.addChild(shootLabel);
         this.addChild(ratioLabel);
 
-        this.addEventListener(Event.INPUT_CHANGE, this.touchToRestart);
+        this.addEventListener(Event.TOUCH_START, this.touchToRestart);
+        this.addEventListener(Event.A_BUTTON_DOWN, this.touchToRestart);
     },
 
     touchToRestart: function(evt) {
         var game = Game.instance;
         this.gom.stop();
         scene = new SceneGame();
+        game.replaceScene(scene);
+    }
+});
+
+
+/**
+ * SceneMenu  
+ */
+ var SceneMenu = Class.create(Scene, {
+    initialize: function() {
+        var titreLabel, creditLabel;
+        Scene.apply(this);
+        this.backgroundColor = 'black';
+
+        var game;
+        game = Game.instance;
+        // Background music
+        //this.gom = game.assets[gameOverPath]; // Add this line
+        // Start BGM
+       // this.gom.play();
+
+       titreLabel = new Label("INTERGALACTIC<br>SPACE<br>SHOOTER");
+       titreLabel.x = game.width/2-titreLabel.width/2;
+       titreLabel.y = game.height/5-70;
+       titreLabel.color = 'white';
+       titreLabel.font = '34px strong';
+       titreLabel.textAlign = 'center';
+
+       var tapLabel = new Label('Tap to play');
+       tapLabel.x = game.width/2-tapLabel.width/2;
+       tapLabel.y = game.height/2.5;        
+       tapLabel.color = 'white';
+       tapLabel.font = '30px strong';
+       tapLabel.textAlign = 'center';
+
+       creditLabel = new Label('Furious Cat Interactive - 2015');
+       creditLabel .font = '20px strong';
+       creditLabel .x = game.width/2-creditLabel.width/2;
+       creditLabel .y = game.height-15-10;    
+       creditLabel .color = 'white';
+       creditLabel .textAlign = 'center';
+
+       var penguin = new Penguin();
+       penguin.x = game.width/2 - penguin.width/2;
+       penguin.y = 2*game.height/3 - penguin.height/2;
+       
+       var groupStar = new Group();
+       this.groupStar = groupStar;
+       this.generateStars =0;
+       this.deltaAppartionStar = 0.2;
+
+       this.addChild(this.groupStar);
+       this.addChild(titreLabel);
+       this.addChild(tapLabel);
+       this.addChild(creditLabel);
+       this.addChild(penguin);
+
+       this.addEventListener(Event.TOUCH_START, this.touchToRestart);
+       this.addEventListener(Event.A_BUTTON_DOWN, this.touchToRestart);
+       this.addEventListener(Event.ENTER_FRAME, this.update);
+   },
+
+   update: function(evt){
+    this.generateStars += evt.elapsed * 0.001;
+    if(this.generateStars>= this.deltaAppartionStar)
+    {
+        star = new Star();
+        this.groupStar.addChild(star);
+        this.generateStars=0;   
+    }
+},
+
+touchToRestart: function(evt) {
+    var game = Game.instance;
+        //this.gom.stop();
+        scene = new SceneGame();
+        game.replaceScene(scene);
+    }
+});
+
+
+
+/**
+ * Bootspash 
+ */
+ var Bootspash = Class.create(Scene, {
+    initialize: function() {
+
+        Scene.apply(this);
+        this.backgroundColor = 'black';
+
+        var game;
+        game = Game.instance;
+
+        this.cat = Class.create(Sprite, {
+
+            initialize: function() {
+                var projectileGroup;
+                var shootDuration;
+                var shootPossible = true;
+        // Call superclass constructor
+        Sprite.apply(this,[1214, 1147]);
+        this.image = Game.instance.assets[FCIPath];
+        var scale =0.66*(game.width/this.width);
+        this.scale(scale,scale);
+    }
+});
+
+this.addChild(this.cat);
+
+this.addEventListener(Event.TOUCH_START, this.touchToRestart);
+this.addEventListener(Event.A_BUTTON_DOWN, this.touchToRestart);
+this.addEventListener(Event.ENTER_FRAME, this.update);
+},
+
+update: function(evt){
+    this.generateStars += evt.elapsed * 0.001;
+    if(this.generateStars>= this.deltaAppartionStar)
+    {
+        star = new Star();
+        this.groupStar.addChild(star);
+        this.generateStars=0;   
+    }
+},
+
+touchToRestart: function(evt) {
+    var game = Game.instance;
+        //this.gom.stop();
+        scene = new SceneMenu();
         game.replaceScene(scene);
     }
 });
