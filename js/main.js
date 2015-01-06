@@ -120,7 +120,7 @@ window.onload = function() {
                 label.x = 5;
                 label.y = 5;        
                 label.color = 'white';
-                label.font = '25px strong';
+                label.font = '25px myFirstFont';
                 label.textAlign = 'left';
                 label._style.textShadow ="-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
                 this.scoreLabel = label;        
@@ -129,7 +129,7 @@ window.onload = function() {
                 shooting.x = game.width-shooting.width-7;
                 shooting.y = 5;        
                 shooting.color = 'white';
-                shooting.font = '25px strong';
+                shooting.font = '25px myFirstFont';
                 shooting.textAlign = 'right';
                 shooting._style.textShadow ="-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
                 this.shooting = shooting;   
@@ -277,7 +277,7 @@ window.onload = function() {
                        for (var j = this.penguin.projectileGroup.childNodes.length - 1; j >= 0; j--){
                          var projectile;
                          projectile = this.penguin.projectileGroup.childNodes[j];
-                         if(projectile.intersect(ice) && ice.y>-1*ice.height/3){
+                         if(projectile.intersect(ice) && ice.y>-1*ice.height/3 && ice.actuallyDestoyed==false){
                             ice.destroyed1(projectile);
                         }
                     }
@@ -658,21 +658,21 @@ var Star = enchant.Class.create(enchant.Sprite, {
         gameOverLabel.x = game.width/2-gameOverLabel.width/2;
         gameOverLabel.y = game.height/3-70;
         gameOverLabel.color = 'white';
-        gameOverLabel.font = '32px strong';
+        gameOverLabel.font = '34px myFirstFont';
         gameOverLabel.textAlign = 'center';
 
         scoreLabel = new Label('SCORE: ' + score);
         scoreLabel.x = game.width/2-scoreLabel.width/2;
         scoreLabel.y = game.height/2;        
         scoreLabel.color = 'white';
-        scoreLabel.font = '24px strong';
+        scoreLabel.font = '28px myFirstFont';
         scoreLabel.textAlign = 'center';
 
         shootLabel = new Label('SHOOTING: ' + shoot);
         shootLabel.x = game.width/2-shootLabel.width/2;
         shootLabel.y = game.height/2+2*20;        
         shootLabel.color = 'white';
-        shootLabel.font = '24px strong';
+        shootLabel.font = '28px myFirstFont';
         shootLabel.textAlign = 'center';
 
         var nombre = score/shoot*100;
@@ -685,7 +685,7 @@ var Star = enchant.Class.create(enchant.Sprite, {
         ratioLabel.x = game.width/2-ratioLabel.width/2;
         ratioLabel.y = game.height/2+4*20;        
         ratioLabel.color = 'white';
-        ratioLabel.font = '24px strong';
+        ratioLabel.font = '28px myFirstFont';
         ratioLabel.textAlign = 'center';
 
         this.addChild(gameOverLabel);
@@ -722,24 +722,24 @@ var Star = enchant.Class.create(enchant.Sprite, {
         // Start BGM
        // this.gom.play();
 
-       titreLabel = new Label("INTERGALACTIC<br>SPACE<br>SHOOTER");
+       titreLabel = new Label("INTERGALACTIC <br>SPACE <br>SHOOTER");
        titreLabel.x = game.width/2-titreLabel.width/2;
        titreLabel.y = game.height/5-70;
        titreLabel.color = 'white';
-       titreLabel.font = '34px strong';
+       titreLabel.font = '34px myFirstFont';
        titreLabel.textAlign = 'center';
 
        var tapLabel = new Label('Tap to play');
        tapLabel.x = game.width/2-tapLabel.width/2;
        tapLabel.y = game.height/2.5;        
        tapLabel.color = 'white';
-       tapLabel.font = '30px strong';
+       tapLabel.font = '30px myFirstFont';
        tapLabel.textAlign = 'center';
 
-       creditLabel = new Label('Furious Cat Interactive - 2015');
-       creditLabel .font = '20px strong';
+       creditLabel = new Label('Furious Cat Interactive 2015');
+       creditLabel .font = '20px myFirstFont';
        creditLabel .x = game.width/2-creditLabel.width/2;
-       creditLabel .y = game.height-15-10;    
+       creditLabel .y = game.height-3*15-10;    
        creditLabel .color = 'white';
        creditLabel .textAlign = 'center';
 
