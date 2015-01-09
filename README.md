@@ -4,7 +4,7 @@ A small Shoot'em up game in space, made with [enchant.js](http://enchantjs.com/)
 
 There is only the 'Arcade Mode' for the moment (no levels, score as far as you can).
 
-[click here to play](http://corentin-r.github.io/shmup.js-master/index.html).
+[-> dedicated page](http://corentin-r.github.io/ISS/).
  
 
 ##Controls
