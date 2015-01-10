@@ -63,7 +63,8 @@ window.onload = function() {
         		enemy3SheetPath,
         		enemy4SheetPath,
         		projectileSheetPath,
-        		starSheetPath);
+        		starSheetPath,
+        		explosionSheetPath);
         }
         else{
         	game.preload(
