@@ -2,6 +2,8 @@
 
 A small Shoot'em up game in space, made with [enchant.js](http://enchantjs.com/) to help me to learn JavaScript.
 
+Like every shoot'em up the goal is to destroy the ships coming up and survive.
+
 There is only the 'Arcade Mode' for the moment (no levels, score as far as you can).
 
 [-> dedicated page](http://corentin-r.github.io/ISS/).
@@ -9,13 +11,18 @@ There is only the 'Arcade Mode' for the moment (no levels, score as far as you c
 
 ##Controls
 
-* On mobile devices:
+* On tactile/mobile devices:
   * Touch the screen to move the spaceship and shoot
 
 * On Desktop devices:
   * Mouse: click and move
   * Keyboard: move with arrows keys and shoot with space
 
+##Screenshots
+
+![Capture-menu](res/Captue-menu.png)
+![Capture-game](res/Captue-game.png)
+![Capture-gameover](res/Captue-gameover.png)
 
 ##Credits
 
