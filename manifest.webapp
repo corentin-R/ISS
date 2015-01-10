@@ -1,0 +1,24 @@
+{
+  "version": "0.1",
+  "name": "Intergalactic Space Shooter",
+  "description": "Simple Shmup Game",
+  "launch_path": "/index.html",
+  "icons": {
+    "64": "/app-icons/icon-64.png",
+    "128": "/app-icons/icon-128.png",
+    "360": "/app-icons/icon-360.png"
+  },
+  "developer": {
+    "name": "Coco",
+    "url": "https://github.com/corentin-R/ISS"
+  },
+  "locales": {
+    "fr": {
+      "description": "Simple jeu de tir dans l'espace.",
+      "developer": {
+        "url": "https://github.com/corentin-R/ISS"
+      }
+    }
+  },
+  "default_locale": "en"
+}
