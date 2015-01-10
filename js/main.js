@@ -38,33 +38,14 @@ window.onload = function() {
         // Starting point
 
         var scale;
-        if(larg<largeurBase){
-            scale = larg/largeurBase;
-            hauteurBase=haut/scale;
-        }
-        else if(haut<hauteurBase && haut/larg>4/3){
+
+        if(haut/larg>4/3){
             scale = haut/hauteurBase; 
-            largeurBase=larg/scale;               
-        }
-        else if(haut<hauteurBase && !(haut/larg>4/3)){
-            scale = haut/hauteurBase;            
-        }
-        else if(haut/larg>4/3){
-            if(larg>largeurBase && haut>hauteurBase){
-                scale = haut/hauteurBase; 
-                largeurBase=larg/scale; 
-            }
-            else if(larg>largeurBase && !(haut>hauteurBas)){
-                scale = larg/largeurBase;
-                hauteurBase=haut/scale;
-            }
-            else if(!(larg>largeurBase) && haut>hauteurBas){
-                scale = haut/hauteurBase; 
-                largeurBase=larg/scale; 
-            }   
+            largeurBase=larg/scale;            
         }
         else{
-            scale=1;
+            scale = haut/hauteurBase; 
+            largeurBase=larg/scale;  
         }
 
         var game = new Game(largeurBase, hauteurBase);
@@ -120,7 +101,7 @@ window.onload = function() {
                 label.x = 5;
                 label.y = 5;        
                 label.color = 'white';
-                label.font = '25px myFirstFont';
+                label.font = '23px myFirstFont';
                 label.textAlign = 'left';
                 label._style.textShadow ="-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
                 this.scoreLabel = label;        
@@ -129,7 +110,7 @@ window.onload = function() {
                 shooting.x = game.width-shooting.width-7;
                 shooting.y = 5;        
                 shooting.color = 'white';
-                shooting.font = '25px myFirstFont';
+                shooting.font = '23px myFirstFont';
                 shooting.textAlign = 'right';
                 shooting._style.textShadow ="-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
                 this.shooting = shooting;   
@@ -723,7 +704,7 @@ var Star = enchant.Class.create(enchant.Sprite, {
        // this.gom.play();
 
        titreLabel = new Label("INTERGALACTIC <br>SPACE <br>SHOOTER");
-       titreLabel.x = game.width/2-titreLabel.width/2;
+       titreLabel.x = game.width/2-titreLabel.width/1.8;
        titreLabel.y = game.height/5-70;
        titreLabel.color = 'white';
        titreLabel.font = '34px myFirstFont';
