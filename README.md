@@ -20,9 +20,9 @@ There is only the 'Arcade Mode' for the moment (no levels, score as far as you c
 
 ##Screenshots
 
-![Capture-menu](res/Captue-menu.png)
-![Capture-game](res/Captue-game.png)
-![Capture-gameover](res/Captue-gameover.png)
+![Capture-menu](res/Capture-menu.png)
+![Capture-game](res/Capture-game.png)
+![Capture-gameover](res/Capture-gameover.png)
 
 ##Credits
 
