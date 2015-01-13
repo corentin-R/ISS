@@ -133,7 +133,6 @@ window.onload = function() {
                 starGroup = new Group();
                 this.starGroup = starGroup;
 
-
                 //attention à l'ordre!!!!
                 this.addChild(this.starGroup);
                 this.addChild(projectilesGroup);
@@ -504,10 +503,10 @@ var Projectile = enchant.Class.create(enchant.Sprite, {
         this.camp = faction;
         Sprite.apply(this,[12, 12]);
         if(this.camp==JOUEUR){
-        	 this.image = Game.instance.assets[projectileSheetPath]; // set image
+        	 this.image = Game.instance.assets[projectilePlayerSheetPath]; // set image
         }
         else{
-    	    this.image = Game.instance.assets[projectilePlayerSheetPath]; // set image
+    	    this.image = Game.instance.assets[projectileSheetPath]; // set image
     	}
 
     	this.y = y+5; 
