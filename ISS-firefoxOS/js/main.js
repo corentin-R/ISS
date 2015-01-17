@@ -137,7 +137,7 @@ window.onload = function() {
                 this.addChild(label);
                 this.addChild(shooting);
 
-                this.addEventListener('touchmove',this.handleTouchControl);
+                this.addEventListener(Event.TOUCH_MOVE,this.handleTouchControl);
                 this.addEventListener(Event.ENTER_FRAME,this.update);
                 //this.addEventListener(Event.TOUCH_START,game.pause());
 
@@ -160,7 +160,7 @@ window.onload = function() {
 
                 handleTouchControl: function (evt) {
                     this.penguin.x = evt.x-this.penguin.width/2;
-                    this.penguin.y = evt.y-this.penguin.height/2;
+                    this.penguin.y = evt.y-this.penguin.height-10;
                     if(this.penguin.shootPossible==true){
                         this.penguin.shoot();
                     }
@@ -212,6 +212,9 @@ window.onload = function() {
 
                             if(this.vitesseEnnemy<16)
                                 this.vitesseEnnemy+=0.1;
+
+                            if(this.vitesseProjCarre<128)
+                                this.vitesseProjCarre += 0.8;
 
                             ice = new Ice(this.vitesseEnnemy,Math.floor(Math.random()*4)+1, this.deltaShoot, this.vitesseProjCarre); 
                         }
@@ -343,8 +346,8 @@ window.onload = function() {
         },
 
         canShoot: function(evt) {
-            var delta=0.42;
-            this.shootDuration = this.shootDuration +evt.elapsed * 0.001;       
+            var delta=0.40;
+            this.shootDuration = this.shootDuration + 0.012;       
             if(this.shootDuration >= delta) {
                 this.shootPossible = true;
             }
