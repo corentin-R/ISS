@@ -71,9 +71,9 @@ window.onload = function() {
                 game.pushScene(scene);
                 //scene.moveTo(50, 100); 
             }
-            window.scrollTo(0,0);
+            
             game.start();  
-
+            window.scrollTo(0, 0);
         };
 
 /**
@@ -346,7 +346,7 @@ window.onload = function() {
         },
 
         canShoot: function(evt) {
-            var delta=0.40;
+            var delta=0.35;
             this.shootDuration = this.shootDuration + 0.012;       
             if(this.shootDuration >= delta) {
                 this.shootPossible = true;
@@ -362,6 +362,7 @@ window.onload = function() {
             this.shootDuration = 0 ;
             this.parentNode.shoot++;
             this.parentNode.setShoot(this.parentNode.shoot);
+            this.shootPossible = false;
             //Game.instance.assets[shootPath].play();
         },
 
