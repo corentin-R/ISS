@@ -149,7 +149,7 @@ window.onload = function() {
                 this.vitesseEnnemy = 7;
                 this.vitesseProjCarre = 16;
                 this.deltaShoot = 1.6;
-                this.deltaAppartion = 2.0;
+                this.deltaAppartion = 2.5;
                 this.deltaAppartionStar = 0.8;
 
 
@@ -160,7 +160,7 @@ window.onload = function() {
 
                 handleTouchControl: function (evt) {
                     this.penguin.x = evt.x-this.penguin.width/2;
-                    this.penguin.y = evt.y-this.penguin.height-10;
+                    this.penguin.y = evt.y-this.penguin.height*1.5;
                     if(this.penguin.shootPossible==true){
                         this.penguin.shoot();
                     }
@@ -168,8 +168,8 @@ window.onload = function() {
 
                 update: function(evt) {
 
-                    this.generateIceTimer += evt.elapsed * 0.001;
-                    this.generateStars += evt.elapsed * 0.001;
+                    this.generateIceTimer +=  0.016;
+                    this.generateStars += 0.016;
                     if(this.generateStars>= this.deltaAppartionStar)
                     {
                         star = new Star();
@@ -190,6 +190,8 @@ window.onload = function() {
 
                         if(this.deltaShoot>0.15)
                             this.deltaShoot -= 0.015;
+
+                        console.log(this.deltaAppartion);
 
                         if(this.score<15){
                             ice = new Ice(4,1, this.deltaShoot, this.vitesseProjCarre);
@@ -440,7 +442,7 @@ window.onload = function() {
 
             game = Game.instance;
             ySpeed = this.vitesse*20;
-            this.y += ySpeed * evt.elapsed * 0.001;
+            this.y += ySpeed * 0.016;
 
             if(this.typee==4){
                 if(this.dir>0){
@@ -468,7 +470,7 @@ window.onload = function() {
 
 shoot: function(evt) {
 
-    this.animationDuration += evt.elapsed * 0.001;       
+    this.animationDuration += 0.016;       
     if(this.animationDuration >=  this.delta)
     {
         var p = new Projectile(this.x, this.y, this.width, ENNEMY, this.vitesseProjCarre, this.typee);
@@ -580,7 +582,7 @@ var Explostion = enchant.Class.create(enchant.Sprite, {
     },
 
     update: function(evt) {
-        this.animationDuration += evt.elapsed * 0.001;       
+        this.animationDuration += 0.016;       
         if(this.animationDuration >= 0.06)
         {
             this.frame = (this.frame + 1);
@@ -749,7 +751,7 @@ var Star = enchant.Class.create(enchant.Sprite, {
     },
 
     update: function(evt){
-        this.generateStars += evt.elapsed * 0.001;
+        this.generateStars += 0.01;
         if(this.generateStars>= this.deltaAppartionStar)
         {
             star = new Star();
@@ -801,7 +803,7 @@ var Star = enchant.Class.create(enchant.Sprite, {
     },
 
     update: function(evt){
-        this.generateStars += evt.elapsed * 0.001;
+        this.generateStars += 0.016;
         if(this.generateStars>= this.deltaAppartionStar)
         {
             star = new Star();
