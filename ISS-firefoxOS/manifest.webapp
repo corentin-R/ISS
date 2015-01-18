@@ -1,7 +1,7 @@
 {
-  "version": "0.1",
+  "version": "0.1.2",
   "name": "Intergalactic Space Shooter",
-  "description": "Simple Shmup Game",
+  "description": "A small Shoot'em up game in space, made with enchant.js.",
   "launch_path": "/index.html",
   "icons": {
     "64": "/app-icons/icon-64.png",
